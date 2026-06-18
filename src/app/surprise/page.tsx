@@ -44,11 +44,11 @@ export default function SurprisePage() {
           </p>
 
           <h1 className="font-bold text-white font-poppins text-4xl md:text-6xl">
-            Your Random Meal 🎲
+            Your Random Meal
           </h1>
 
           <p className="text-[#9E9E9E] font-poppins text-base max-w-xl mx-auto">
-            Not sure what to cook? Let us decide for you. Hit shuffle for a new
+            Not sure what to cook? Let us decide for you. Hit role for a new
             one!
           </p>
 
@@ -68,11 +68,10 @@ export default function SurprisePage() {
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
-            <Shuffle
-              size={20}
-              className={cn(spinning && "animate-spin")}
-            />
-            Shuffle Again
+            <span className={cn("inline-block text-xl", spinning && "animate-spin")}>
+  🎲
+</span>
+            Role Again
           </button>
         </div>
 
@@ -180,7 +179,7 @@ export default function SurprisePage() {
             {/* Ingredients Preview */}
             <div>
               <h3 className="font-bold text-white font-poppins text-2xl mb-6">
-                🛒 Ingredients Needed
+                Ingredients Needed
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -217,36 +216,6 @@ export default function SurprisePage() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* CTA */}
-            <div
-              className={cn(
-                "text-center py-16 rounded-[32px]",
-                "bg-[#1A1A1A] border border-white/5"
-              )}
-            >
-              <p className="text-[#9E9E9E] font-poppins text-base mb-6">
-                Not feeling this one?
-              </p>
-
-              <button
-                onClick={fetchRandom}
-                disabled={loading}
-                className={cn(
-                  "inline-flex items-center gap-3",
-                  "px-8 py-4 rounded-full",
-                  "bg-[#FF6B2C] text-white",
-                  "font-bold text-base font-poppins",
-                  "shadow-[0_0_30px_rgba(255,107,44,0.5)]",
-                  "hover:brightness-110 hover:scale-105",
-                  "active:scale-95 transition-all duration-200",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
-              >
-                <Shuffle size={20} />
-                Try Another Meal
-              </button>
             </div>
           </div>
         ) : null}

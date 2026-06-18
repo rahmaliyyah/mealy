@@ -48,6 +48,13 @@ export default function Navbar() {
     }
   };
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (window.location.pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
     <>
       <nav
@@ -66,7 +73,7 @@ export default function Navbar() {
         )}
       >
         {/* Logo */}
-        <Link href="/" className="flex items-center">
+        <Link href="/" onClick={handleLogoClick} className="flex items-center">
           <Image
             src="/assets/logo.svg"
             alt="Mealy Logo"
@@ -294,7 +301,7 @@ export default function Navbar() {
               onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
               onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
             >
-              <Shuffle size={16} />
+             <span style={{ fontSize: "18px" }}>🎲</span>
               Surprise Me
             </Link>
           )}

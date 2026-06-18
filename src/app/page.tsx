@@ -335,20 +335,13 @@ export default function HomePage() {
                 key={area.strArea}
                 href={`/areas/${area.strArea}`}
                 className={cn(
-                  "group flex flex-col items-center gap-2 p-4",
-                  "rounded-2xl",
+                  "group flex flex-col items-center justify-center gap-2 p-4",
+                  "rounded-2xl min-h-[80px]",
                   "bg-[#1A1A1A] border border-white/5",
                   "hover:border-[#FF6B2C]/30 hover:bg-[#242424]",
                   "transition-all duration-300 cursor-pointer"
                 )}
               >
-                <span className={cn(
-                  "text-2xl font-bold font-poppins",
-                  "text-white/20 group-hover:text-[#FF6B2C]/60",
-                  "transition-colors duration-300"
-                )}>
-                  {area.strArea.slice(0, 2).toUpperCase()}
-                </span>
                 <p className={cn(
                   "text-xs font-medium text-[#E0E0E0] font-poppins text-center",
                   "group-hover:text-[#FF6B2C] transition-colors duration-200"
@@ -449,6 +442,22 @@ export default function HomePage() {
                 {ing.strIngredient}
               </Link>
             ))}
+          </div>
+
+          <div className="flex justify-center mt-10">
+            <Link
+              href="/ingredients"
+              className={cn(
+                "flex items-center gap-2",
+                "px-8 py-3.5 rounded-pill",
+                "bg-[#1A1A1A] border border-white/10",
+                "text-sm font-semibold text-[#E0E0E0] font-poppins",
+                "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
+                "transition-all duration-200"
+              )}
+            >
+              Browse All Ingredients →
+            </Link>
           </div>
         </div>
       </section>
