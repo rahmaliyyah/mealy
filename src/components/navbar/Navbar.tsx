@@ -124,44 +124,50 @@ export default function Navbar() {
                         top: "100%",
                         left: "50%",
                         transform: "translateX(-50%)",
-                        marginTop: "16px",
+                        marginTop: "0px",
+                        paddingTop: "16px",
                         width: "224px",
-                        borderRadius: "16px",
-                        backgroundColor: "rgba(26,26,26,0.98)",
-                        backdropFilter: "blur(20px)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                        padding: "8px",
                         zIndex: 10,
                       }}
                     >
-                      {link.dropdown.map((item) => (
-                        <Link
-                          key={item.label}
-                          href={item.href}
-                          style={{
-                            display: "block",
-                            padding: "12px 16px",
-                            borderRadius: "12px",
-                            color: "#E0E0E0",
-                            fontSize: "14px",
-                            fontWeight: 500,
-                            fontFamily: "var(--font-poppins)",
-                            textDecoration: "none",
-                            transition: "all 0.15s ease",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
-                            e.currentTarget.style.color = "#FFFFFF";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "transparent";
-                            e.currentTarget.style.color = "#E0E0E0";
-                          }}
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
+                      <div
+                        style={{
+                          borderRadius: "16px",
+                          backgroundColor: "rgba(26,26,26,0.98)",
+                          backdropFilter: "blur(20px)",
+                          border: "1px solid rgba(255,255,255,0.1)",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                          padding: "8px",
+                        }}
+                      >
+                        {link.dropdown.map((item) => (
+                          <Link
+                            key={item.label}
+                            href={item.href}
+                            style={{
+                              display: "block",
+                              padding: "12px 16px",
+                              borderRadius: "12px",
+                              color: "#E0E0E0",
+                              fontSize: "14px",
+                              fontWeight: 500,
+                              fontFamily: "var(--font-poppins)",
+                              textDecoration: "none",
+                              transition: "all 0.15s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
+                              e.currentTarget.style.color = "#FFFFFF";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = "transparent";
+                              e.currentTarget.style.color = "#E0E0E0";
+                            }}
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -266,7 +272,7 @@ export default function Navbar() {
             )}
           </form>
 
-          {/* Surprise Me - hidden on mobile */}
+          {/* Surprise Me */}
           {!isMobile && (
             <Link
               href="/surprise"
