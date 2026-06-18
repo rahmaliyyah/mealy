@@ -9,13 +9,13 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { label: "Home", href: "/" },
   {
-    label: "Browse",
+    label: "Explore Meals",
     href: "#",
     dropdown: [
-      { label: "Categories", href: "/categories" },
-      { label: "Area", href: "/areas" },
-      { label: "Ingredients", href: "/ingredients" },
-      { label: "A-Z Index", href: "/az" },
+      { label: "by Categories", href: "/categories" },
+      { label: "by Area", href: "/areas" },
+      { label: "by Ingredients", href: "/ingredients" },
+      { label: "by A-Z Index", href: "/az" },
     ],
   },
 ];
@@ -26,11 +26,19 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -43,194 +51,299 @@ export default function Navbar() {
   return (
     <>
       <nav
+        style={{ padding: "12px 40px" }}
         className={cn(
           "fixed top-4 left-1/2 -translate-x-1/2 z-50",
-          "w-[calc(100%-2rem)] max-w-6xl",
-          "rounded-pill",
+          "w-[80%] max-w-7xl",
+          "rounded-full",
           "border border-white/10",
-          "px-6 py-3",
-          "flex items-center justify-between gap-4",
+          "grid grid-cols-[auto_1fr_auto]",
+          "items-center",
           "transition-all duration-300",
           scrolled
-            ? "bg-[rgba(26,26,26,0.95)] shadow-navbar backdrop-blur-xl"
+            ? "bg-[rgba(26,26,26,0.95)] backdrop-blur-xl shadow-navbar"
             : "bg-[rgba(255,255,255,0.05)] backdrop-blur-xl shadow-navbar"
         )}
       >
-        {/* Logo Only */}
-        <Link href="/" className="flex items-center flex-shrink-0">
+        {/* Logo */}
+        <Link href="/" className="flex items-center">
           <Image
             src="/assets/logo.svg"
             alt="Mealy Logo"
-            width={36}
-            height={36}
+            width={78}
+            height={78}
+            priority
           />
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) =>
-            link.dropdown ? (
-              <div
-                key={link.label}
-                className="relative"
-                onMouseEnter={() => setBrowseOpen(true)}
-                onMouseLeave={() => setBrowseOpen(false)}
-              >
-                <button
-                  className={cn(
-                    "flex items-center gap-1",
-                    "text-[#E0E0E0] hover:text-[#FF6B2C]",
-                    "font-medium text-sm font-poppins",
-                    "transition-colors duration-200"
+        {/* Center Navigation */}
+        <div
+          style={{
+            display: isMobile ? "none" : "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "56px" }}>
+            {navLinks.map((link) =>
+              link.dropdown ? (
+                <div
+                  key={link.label}
+                  style={{ position: "relative" }}
+                  onMouseEnter={() => setBrowseOpen(true)}
+                  onMouseLeave={() => setBrowseOpen(false)}
+                >
+                  <button
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "#E0E0E0",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-poppins)",
+                    }}
+                  >
+                    {link.label}
+                    <ChevronDown
+                      size={16}
+                      style={{
+                        transition: "transform 0.2s ease",
+                        transform: browseOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      }}
+                    />
+                  </button>
+
+                  {browseOpen && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        marginTop: "16px",
+                        width: "224px",
+                        borderRadius: "16px",
+                        backgroundColor: "rgba(26,26,26,0.98)",
+                        backdropFilter: "blur(20px)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                        padding: "8px",
+                        zIndex: 10,
+                      }}
+                    >
+                      {link.dropdown.map((item) => (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          style={{
+                            display: "block",
+                            padding: "12px 16px",
+                            borderRadius: "12px",
+                            color: "#E0E0E0",
+                            fontSize: "14px",
+                            fontWeight: 500,
+                            fontFamily: "var(--font-poppins)",
+                            textDecoration: "none",
+                            transition: "all 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)";
+                            e.currentTarget.style.color = "#FFFFFF";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "transparent";
+                            e.currentTarget.style.color = "#E0E0E0";
+                          }}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
                   )}
+                </div>
+              ) : (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  style={{
+                    color: "#E0E0E0",
+                    fontWeight: 500,
+                    fontSize: "16px",
+                    fontFamily: "var(--font-poppins)",
+                    textDecoration: "none",
+                    transition: "color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#FF6B2C")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#E0E0E0")}
                 >
                   {link.label}
-                  <ChevronDown
-                    size={14}
-                    className={cn(
-                      "transition-transform duration-200",
-                      browseOpen && "rotate-180"
-                    )}
-                  />
-                </button>
-
-                {browseOpen && (
-                  <div
-                    className={cn(
-                      "absolute top-full left-1/2 -translate-x-1/2 mt-3",
-                      "w-48",
-                      "rounded-2xl",
-                      "bg-[rgba(26,26,26,0.95)] backdrop-blur-xl",
-                      "border border-white/10",
-                      "shadow-card",
-                      "p-2"
-                    )}
-                  >
-                    {link.dropdown.map((item) => (
-                      <Link
-                        key={item.label}
-                        href={item.href}
-                        className={cn(
-                          "block px-4 py-2.5",
-                          "rounded-xl",
-                          "text-[#E0E0E0] hover:text-white hover:bg-white/10",
-                          "text-sm font-medium font-poppins",
-                          "transition-all duration-150"
-                        )}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                key={link.label}
-                href={link.href}
-                className={cn(
-                  "text-[#E0E0E0] hover:text-[#FF6B2C]",
-                  "font-medium text-sm font-poppins",
-                  "transition-colors duration-200"
-                )}
-              >
-                {link.label}
-              </Link>
-            )
-          )}
+                </Link>
+              )
+            )}
+          </div>
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center gap-3">
-          {/* Search */}
-          <form onSubmit={handleSearch}>
-            <div
-              className={cn(
-                "flex items-center",
-                "rounded-pill overflow-hidden",
-                "transition-all duration-300",
-                searchOpen
-                  ? "w-48 bg-[rgba(255,255,255,0.08)] border border-white/10"
-                  : "w-9 bg-transparent"
-              )}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+
+          {/* Search Bar */}
+          <form
+            onSubmit={handleSearch}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "9999px",
+              overflow: "hidden",
+              width: searchOpen ? "240px" : "44px",
+              height: "44px",
+              transition: "width 0.3s ease",
+            }}
+          >
+            <button
+              type={searchOpen ? "submit" : "button"}
+              onClick={() => !searchOpen && setSearchOpen(true)}
+              style={{
+                width: "44px",
+                height: "44px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
             >
+              <Search size={18} color="#9E9E9E" />
+            </button>
+
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search meals..."
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "white",
+                fontSize: "14px",
+                fontFamily: "var(--font-poppins)",
+                paddingRight: "12px",
+                opacity: searchOpen ? 1 : 0,
+                transition: "opacity 0.2s ease",
+                width: searchOpen ? "auto" : "0px",
+              }}
+            />
+
+            {searchOpen && (
               <button
                 type="button"
-                onClick={() => setSearchOpen(!searchOpen)}
-                className={cn(
-                  "flex-shrink-0 w-9 h-9",
-                  "flex items-center justify-center",
-                  "text-[#9E9E9E] hover:text-white",
-                  "transition-colors duration-200"
-                )}
+                onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#9E9E9E",
+                  flexShrink: 0,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  marginRight: "4px",
+                }}
               >
-                <Search size={16} />
+                <X size={14} />
               </button>
-              {searchOpen && (
-                <input
-                  autoFocus
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search meals..."
-                  className={cn(
-                    "flex-1 bg-transparent outline-none",
-                    "text-white text-sm font-poppins",
-                    "placeholder:text-[#9E9E9E]",
-                    "pr-3"
-                  )}
-                />
-              )}
-            </div>
+            )}
           </form>
 
-          {/* Surprise Me Button */}
-          <Link
-            href="/surprise"
-            className={cn(
-              "hidden md:flex items-center gap-2",
-              "px-5 py-2.5",
-              "rounded-pill",
-              "bg-[#FF6B2C] text-white",
-              "text-sm font-semibold font-poppins whitespace-nowrap",
-              "hover:brightness-110 hover:scale-105",
-              "active:scale-95",
-              "transition-all duration-200",
-              "shadow-[0_0_20px_rgba(255,107,44,0.4)]"
-            )}
-          >
-            <Shuffle size={14} />
-            Surprise Me
-          </Link>
+          {/* Surprise Me - hidden on mobile */}
+          {!isMobile && (
+            <Link
+              href="/surprise"
+              style={{
+                padding: "12px 28px",
+                borderRadius: "9999px",
+                backgroundColor: "#FF6B2C",
+                color: "white",
+                fontWeight: 600,
+                fontFamily: "var(--font-poppins)",
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 0 20px rgba(255,107,44,0.4)",
+                transition: "filter 0.2s ease",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
+              onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
+            >
+              <Shuffle size={16} />
+              Surprise Me
+            </Link>
+          )}
 
-          {/* Mobile Hamburger */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className={cn(
-              "md:hidden w-9 h-9",
-              "flex items-center justify-center",
-              "text-[#E0E0E0] hover:text-white",
-              "transition-colors duration-200"
-            )}
-          >
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-          </button>
+          {/* Mobile Menu Button */}
+          {isMobile && (
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              style={{
+                width: "40px",
+                height: "40px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          )}
         </div>
       </nav>
 
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className={cn(
-            "fixed inset-0 z-40",
-            "bg-[#0F0F0F]/95 backdrop-blur-xl",
-            "flex flex-col items-center justify-center gap-8"
-          )}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 40,
+            backgroundColor: "rgba(15,15,15,0.95)",
+            backdropFilter: "blur(20px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "32px",
+          }}
         >
           {navLinks.map((link) =>
             link.dropdown ? (
-              <div key={link.label} className="text-center space-y-4">
-                <p className="text-[#9E9E9E] text-sm font-poppins uppercase tracking-widest">
+              <div key={link.label} style={{ textAlign: "center" }}>
+                <p
+                  style={{
+                    color: "#9E9E9E",
+                    fontSize: "12px",
+                    fontFamily: "var(--font-poppins)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    marginBottom: "16px",
+                  }}
+                >
                   {link.label}
                 </p>
                 {link.dropdown.map((item) => (
@@ -238,10 +351,15 @@ export default function Navbar() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "block text-2xl font-bold text-white font-poppins",
-                      "hover:text-[#FF6B2C] transition-colors duration-200"
-                    )}
+                    style={{
+                      display: "block",
+                      fontSize: "24px",
+                      fontWeight: 700,
+                      color: "white",
+                      fontFamily: "var(--font-poppins)",
+                      textDecoration: "none",
+                      marginBottom: "12px",
+                    }}
                   >
                     {item.label}
                   </Link>
@@ -252,10 +370,13 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "text-3xl font-bold text-white font-poppins",
-                  "hover:text-[#FF6B2C] transition-colors duration-200"
-                )}
+                style={{
+                  fontSize: "30px",
+                  fontWeight: 700,
+                  color: "white",
+                  fontFamily: "var(--font-poppins)",
+                  textDecoration: "none",
+                }}
               >
                 {link.label}
               </Link>
@@ -264,13 +385,21 @@ export default function Navbar() {
           <Link
             href="/surprise"
             onClick={() => setMobileOpen(false)}
-            className={cn(
-              "mt-4 px-8 py-4 rounded-pill",
-              "bg-[#FF6B2C] text-white",
-              "text-lg font-bold font-poppins",
-              "shadow-[0_0_20px_rgba(255,107,44,0.4)]",
-              "flex items-center gap-2"
-            )}
+            style={{
+              marginTop: "16px",
+              padding: "16px 32px",
+              borderRadius: "9999px",
+              backgroundColor: "#FF6B2C",
+              color: "white",
+              fontSize: "18px",
+              fontWeight: 700,
+              fontFamily: "var(--font-poppins)",
+              boxShadow: "0 0 20px rgba(255,107,44,0.4)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              textDecoration: "none",
+            }}
           >
             <Shuffle size={18} />
             Surprise Me

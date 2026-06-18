@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+@theme inline {
   /* Colors */
   --color-background-primary: #0F0F0F;
   --color-background-card: #1A1A1A;
@@ -29,15 +29,15 @@
   --shadow-navbar: 0 4px 24px rgba(0,0,0,0.3);
   --shadow-glow: 0 0 20px rgba(255,107,44,0.4);
 
-  /* Spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 48px;
-  --spacing-3xl: 64px;
-  --spacing-4xl: 96px;
+  /* Spacing - renamed biar gak collision sama Tailwind default */
+  --spacing-custom-xs: 4px;
+  --spacing-custom-sm: 8px;
+  --spacing-custom-md: 16px;
+  --spacing-custom-lg: 24px;
+  --spacing-custom-xl: 32px;
+  --spacing-custom-2xl: 48px;
+  --spacing-custom-3xl: 64px;
+  --spacing-custom-4xl: 96px;
 }
 
 * {
