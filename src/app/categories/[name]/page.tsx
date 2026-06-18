@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronRight, Search, SlidersHorizontal, X, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMealsByCategory, getMealById, type Meal } from "@/lib/api";
 import MealCard from "@/components/cards/MealCard";
@@ -22,6 +22,7 @@ export default function CategoryDetailPage() {
   const [selectedLetter, setSelectedLetter] = useState("");
   const [ingredientSearch, setIngredientSearch] = useState("");
   const [ingredientQuery, setIngredientQuery] = useState("");
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
     getMealsByCategory(name).then(async (previews) => {
@@ -32,6 +33,14 @@ export default function CategoryDetailPage() {
       setLoading(false);
     });
   }, [name]);
+
+  useEffect(() => {
+    const handleScroll = () => setShowBackToTop(window.scrollY > 400);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   // All unique areas from fetched meals
   const availableAreas = Array.from(
@@ -269,6 +278,25 @@ export default function CategoryDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Back to Top Button */}
+      <button
+        onClick={scrollToTop}
+        className={cn(
+          "fixed bottom-8 right-8 z-50",
+          "w-12 h-12 rounded-full",
+          "bg-[#FF6B2C] text-white",
+          "flex items-center justify-center",
+          "shadow-[0_0_20px_rgba(255,107,44,0.5)]",
+          "transition-all duration-300",
+          showBackToTop
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 translate-y-4 pointer-events-none"
+        )}
+        aria-label="Back to top"
+      >
+        <ArrowUp size={20} />
+      </button>
     </div>
   );
 }

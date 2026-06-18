@@ -14,6 +14,12 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Mealy | Discover Your Next Favorite Meal",
   description: "A food recipe discovery website powered by TheMealDB API",
+
+  icons: {
+  icon: "/assets/logo_icon.svg",
+  shortcut: "/assets/logo_icon.svg",
+  apple: "/assets/logo_icon.svg",
+},
 };
 
 export default function RootLayout({

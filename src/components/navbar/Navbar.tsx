@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Search, Shuffle, Menu, X, ChevronDown } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -28,6 +29,9 @@ export default function Navbar() {
   const [browseOpen, setBrowseOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  const pathname = usePathname();
+  const isHomepage = pathname === "/";
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
@@ -48,10 +52,30 @@ export default function Navbar() {
     }
   };
 
-  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (window.location.pathname === "/") {
-      e.preventDefault();
+  // Scroll to hero section smoothly
+  const scrollToHero = () => {
+    const hero = document.getElementById("hero");
+    if (hero) {
+      hero.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Fallback: scroll to top if no #hero element found
       window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleHomeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isHomepage) {
+      e.preventDefault();
+      scrollToHero();
+    }
+    // If not on homepage, let the Link navigate normally to "/"
+    setMobileOpen(false);
+  };
+
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isHomepage) {
+      e.preventDefault();
+      scrollToHero();
     }
   };
 
@@ -182,6 +206,7 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
+                  onClick={link.label === "Home" ? handleHomeClick : undefined}
                   style={{
                     color: "#E0E0E0",
                     fontWeight: 500,
@@ -301,7 +326,7 @@ export default function Navbar() {
               onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
               onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
             >
-             <span style={{ fontSize: "18px" }}>🎲</span>
+              <span style={{ fontSize: "18px" }}>🎲</span>
               Surprise Me
             </Link>
           )}
@@ -382,7 +407,7 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 href={link.href}
-                onClick={() => setMobileOpen(false)}
+                onClick={link.label === "Home" ? handleHomeClick : () => setMobileOpen(false)}
                 style={{
                   fontSize: "30px",
                   fontWeight: 700,

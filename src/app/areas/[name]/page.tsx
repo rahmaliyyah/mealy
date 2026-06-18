@@ -279,10 +279,15 @@ export default function AreaDetailPage() {
               >
                 Clear Filters
               </button>
+              
             </div>
           )}
+          
         </div>
+        
       </div>
+      
     </div>
+    
   );
 }
