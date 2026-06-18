@@ -69,7 +69,7 @@ export default function AZPage() {
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-4">
           <p className="text-[#FF6B2C] text-xs font-bold font-poppins uppercase tracking-widest mb-2">
             Browse
           </p>
@@ -82,14 +82,13 @@ export default function AZPage() {
         </div>
 
         {/* Sticky Letter Nav */}
-        <div
-          className={cn(
-            "sticky top-[88px] z-40 mb-8",
-            "bg-[#0F0F0F]/95 backdrop-blur-xl",
-            "py-4 -mx-6 px-6",
-            "border-b border-white/5"
-          )}
-        >
+       <div
+  className={cn(
+    "mb-8",
+    "py-4",
+    "border-b border-white/5"
+  )}
+>
           <div className="flex flex-wrap gap-2">
             {LETTERS.map((letter) => (
               <button

@@ -97,16 +97,6 @@ export default function CategoriesPage() {
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
-
-                  {/* Left accent on hover */}
-                  <div
-                    className={cn(
-                      "absolute left-0 top-0 bottom-0 w-1",
-                      "bg-[#FF6B2C]",
-                      "opacity-0 group-hover:opacity-100",
-                      "transition-opacity duration-300"
-                    )}
-                  />
                 </div>
 
                 {/* Content */}

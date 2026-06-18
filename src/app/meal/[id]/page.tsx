@@ -6,7 +6,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getMealById, getRandomMeal, getIngredients, type Meal } from "@/lib/api";
+import {
+  getMealById,
+  getMealsByCategory,
+  getIngredients,
+  type Meal,
+} from "@/lib/api";
 import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
 import MealCard from "@/components/cards/MealCard";
 
@@ -90,22 +95,38 @@ export default function MealDetailPage() {
   }, [id]);
 
   useEffect(() => {
-   const fetchRelated = async () => {
+    if (!meal) return;
+
+    const fetchRelated = async () => {
       setLoadingRelated(true);
-      const promises = Array.from({ length: 4 }, () => getRandomMeal());
-      const results = await Promise.all(promises);
-      const unique = Array.from(
-        new Map(
-          results
-            .filter(Boolean)
-            .map((meal) => [meal!.idMeal, meal])
-        ).values()
-      ) as Meal[];
-      setRelatedMeals(unique);
+
+      try {
+        const previews = await getMealsByCategory(meal.strCategory);
+        const filtered = previews.filter((p) => p.idMeal !== meal.idMeal);
+        const shuffled = filtered.sort(() => Math.random() - 0.5).slice(0, 4);
+
+        const details = await Promise.all(
+          shuffled.map((p) => getMealById(p.idMeal))
+        );
+
+        const unique = Array.from(
+          new Map(
+            details
+              .filter(Boolean)
+              .map((m) => [m!.idMeal, m])
+          ).values()
+        ) as Meal[];
+
+        setRelatedMeals(unique);
+      } catch {
+        setRelatedMeals([]);
+      }
+
       setLoadingRelated(false);
     };
+
     fetchRelated();
-  }, []);
+  }, [meal]);
 
   if (loading) {
     return (
@@ -154,9 +175,7 @@ export default function MealDetailPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-[#0F0F0F]/50 to-transparent" />
 
-        {/* Content overlay */}
         <div className="absolute bottom-0 left-0 right-0 max-w-7xl mx-auto px-6 pb-16">
-          {/* Breadcrumb */}
           <div className="flex items-center gap-2 mb-6">
             <Link
               href="/"
@@ -177,7 +196,6 @@ export default function MealDetailPage() {
             </span>
           </div>
 
-          {/* Badges */}
           <div className="flex gap-2 mb-4">
             <span
               className={cn(
@@ -229,16 +247,16 @@ export default function MealDetailPage() {
             >
               <div className="p-6 border-b border-white/5">
                 <h3 className="font-bold text-white font-poppins text-xl">
-                  🛒 Ingredients
+                  Ingredients
                 </h3>
                 <p className="text-[#9E9E9E] text-xs font-poppins mt-1">
                   {ingredients.length} items needed
                 </p>
               </div>
               <ul className="p-4 space-y-1 max-h-[600px] overflow-y-auto">
-               {ingredients.map(({ ingredient, measure }, index) => (
-  <IngredientItem
-    key={`${ingredient}-${index}`}
+                {ingredients.map(({ ingredient, measure }, index) => (
+                  <IngredientItem
+                    key={`${ingredient}-${index}`}
                     ingredient={ingredient}
                     measure={measure}
                   />
@@ -249,8 +267,6 @@ export default function MealDetailPage() {
 
           {/* RIGHT — Instructions + Video */}
           <div className="lg:col-span-8 space-y-12">
-
-            {/* Instructions */}
             <div>
               <h2
                 className={cn(
@@ -259,8 +275,8 @@ export default function MealDetailPage() {
                   "flex items-center gap-3"
                 )}
               >
-                <span className="text-[#FF6B2C]">📋</span>
-                Step-by-Step
+                <span className="text-[#FF6B2C]"></span>
+                Cooking Instructions
               </h2>
               <div className="space-y-4">
                 {steps.map((step, i) => (
@@ -269,11 +285,10 @@ export default function MealDetailPage() {
               </div>
             </div>
 
-            {/* YouTube Video */}
             {youtubeId && (
               <div>
                 <h3 className="font-bold text-white font-poppins text-2xl mb-6">
-                  🎬 Watch the Tutorial
+                  Watch the Tutorial
                 </h3>
                 <div
                   className={cn(
@@ -281,9 +296,7 @@ export default function MealDetailPage() {
                     "bg-[#1A1A1A] border border-white/5",
                     "group cursor-pointer shadow-card"
                   )}
-                  onClick={() =>
-                    window.open(meal.strYoutube, "_blank")
-                  }
+                  onClick={() => window.open(meal.strYoutube, "_blank")}
                 >
                   <Image
                     src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
@@ -306,11 +319,7 @@ export default function MealDetailPage() {
                         "group-hover:scale-110 transition-transform duration-300"
                       )}
                     >
-                      <Play
-                        size={32}
-                        className="text-white ml-1"
-                        fill="white"
-                      />
+                      <Play size={32} className="text-white ml-1" fill="white" />
                     </div>
                   </div>
                 </div>
@@ -328,7 +337,7 @@ export default function MealDetailPage() {
               You Might Also Like
             </h2>
             <p className="text-[#9E9E9E] text-sm font-poppins mt-2">
-              Similar culinary adventures selected for you
+              More {meal.strCategory} recipes you might enjoy
             </p>
           </div>
         </div>
