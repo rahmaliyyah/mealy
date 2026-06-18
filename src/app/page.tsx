@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Shuffle, Search, ChevronDown } from "lucide-react";
+import { Shuffle, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getRandomMeal,
   getCategories,
   getAreas,
   getIngredientsList,
-  getMealsByLetter,
   type Meal,
   type Category,
   type Area,
@@ -21,25 +20,19 @@ import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
 import CategoryCard from "@/components/cards/CategoryCard";
 import SectionHeader from "@/components/ui/SectionHeader";
 
-const QUICK_FILTERS = ["Chicken", "Seafood", "Pasta", "Dessert", "Beef"];
-
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 const LETTER_COLORS = [
-  "bg-[#FF6B2C]", "bg-[#FFB800]", "bg-[#00FFD1]/20 text-[#00FFD1]",
-  "bg-[#FF6B2C]/20 text-[#FF6B2C]", "bg-[#FFB800]/20 text-[#FFB800]",
-  "bg-[#FF1F1F]/20 text-[#FF1F1F]", "bg-[#00E65C]/20 text-[#00E65C]",
+  "bg-[#FF6B2C] text-white",
+  "bg-[#FFB800] text-white",
+  "bg-[#00FFD1]/20 text-[#00FFD1]",
+  "bg-[#FF6B2C]/20 text-[#FF6B2C]",
+  "bg-[#FFB800]/20 text-[#FFB800]",
+  "bg-[#FF1F1F]/20 text-[#FF1F1F]",
+  "bg-[#00E65C]/20 text-[#00E65C]",
 ];
 
-const COUNTRY_FLAGS: Record<string, string> = {
-  American: "🇺🇸", British: "🇬🇧", Canadian: "🇨🇦", Chinese: "🇨🇳",
-  Croatian: "🇭🇷", Dutch: "🇳🇱", Egyptian: "🇪🇬", Filipino: "🇵🇭",
-  French: "🇫🇷", Greek: "🇬🇷", Indian: "🇮🇳", Irish: "🇮🇪",
-  Italian: "🇮🇹", Jamaican: "🇯🇲", Japanese: "🇯🇵", Kenyan: "🇰🇪",
-  Malaysian: "🇲🇾", Mexican: "🇲🇽", Moroccan: "🇲🇦", Polish: "🇵🇱",
-  Portuguese: "🇵🇹", Russian: "🇷🇺", Spanish: "🇪🇸", Thai: "🇹🇭",
-  Tunisian: "🇹🇳", Turkish: "🇹🇷", Ukrainian: "🇺🇦", Vietnamese: "🇻🇳",
-};
+const AREAS_LIMIT = 16;
 
 export default function HomePage() {
   const [heroMeal, setHeroMeal] = useState<Meal | null>(null);
@@ -51,18 +44,18 @@ export default function HomePage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [areaSearch, setAreaSearch] = useState("");
+  const [showAllAreas, setShowAllAreas] = useState(false);
 
-  // Fetch hero meal
+  const areasSectionRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     getRandomMeal().then(setHeroMeal);
   }, []);
 
-  // Fetch meal of the day (localStorage based)
   useEffect(() => {
     const stored = localStorage.getItem("mealy_motd");
     const storedDate = localStorage.getItem("mealy_motd_date");
     const today = new Date().toDateString();
-
     if (stored && storedDate === today) {
       setMotdMeal(JSON.parse(stored));
     } else {
@@ -76,40 +69,39 @@ export default function HomePage() {
     }
   }, []);
 
-  // Fetch 6 random meals
- const fetchRandomMeals = async () => {
+  const fetchRandomMeals = async () => {
     setLoadingRandom(true);
     const promises = Array.from({ length: 6 }, () => getRandomMeal());
     const results = await Promise.all(promises);
     const unique = Array.from(
-      new Map(
-        results
-          .filter(Boolean)
-          .map((meal) => [meal!.idMeal, meal])
-      ).values()
+      new Map(results.filter(Boolean).map((meal) => [meal!.idMeal, meal])).values()
     ) as Meal[];
     setRandomMeals(unique);
     setLoadingRandom(false);
   };
-  
+
   useEffect(() => {
     fetchRandomMeals();
   }, []);
 
-  // Fetch categories, areas, ingredients
   useEffect(() => {
     getCategories().then(setCategories);
-    getAreas().then(setAreas);
+    getAreas().then((data) => {
+      const unique = Array.from(
+        new Map(data.map((a) => [a.strArea, a])).values()
+      );
+      setAreas(unique);
+    });
     getIngredientsList().then((list) => setIngredients(list.slice(0, 20)));
   }, []);
 
- const filteredAreas = Array.from(
-  new Map(
-    areas
-      .filter((a) => a.strArea.toLowerCase().includes(areaSearch.toLowerCase()))
-      .map((a) => [a.strArea, a])
-  ).values()
-);
+  const filteredAreas = areas.filter((a) =>
+    a.strArea.toLowerCase().includes(areaSearch.toLowerCase())
+  );
+
+  const displayedAreas = showAllAreas
+    ? filteredAreas
+    : filteredAreas.slice(0, AREAS_LIMIT);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,12 +110,18 @@ export default function HomePage() {
     }
   };
 
+  const handleShowLess = () => {
+    setShowAllAreas(false);
+    setTimeout(() => {
+      areasSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
+
   return (
     <div className="bg-[#0F0F0F] min-h-screen">
 
-      {/* ===== HERO SECTION ===== */}
+      {/* ===== HERO ===== */}
       <section className="relative w-full h-screen flex items-center overflow-hidden">
-        {/* Background */}
         <div className="absolute inset-0 z-0">
           {heroMeal && (
             <Image
@@ -138,24 +136,16 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-transparent to-[#0F0F0F]/30" />
         </div>
 
-        {/* Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            <h1
-              className={cn(
-                "font-bold text-white font-poppins",
-                "text-4xl md:text-6xl leading-tight"
-              )}
-            >
+            <h1 className="font-bold text-white font-poppins text-4xl md:text-6xl leading-tight">
               Discover Your Next{" "}
               <span className="text-[#FF6B2C]">Favorite Meal</span>
             </h1>
-
             <p className="text-[#9E9E9E] text-lg font-poppins max-w-md">
               Explore thousands of recipes from around the world. Find your next culinary adventure.
             </p>
 
-            {/* Search Bar */}
             <form onSubmit={handleSearch} className="relative max-w-md">
               <input
                 type="text"
@@ -186,41 +176,17 @@ export default function HomePage() {
                 <Search size={16} />
               </button>
             </form>
-
-            {/* Quick Filters */}
-            <div className="flex flex-wrap gap-2">
-              {QUICK_FILTERS.map((filter) => (
-                <Link
-                  key={filter}
-                  href={`/categories/${filter}`}
-                  className={cn(
-                    "px-4 py-2 rounded-pill",
-                    "bg-[#00FFD1]/10 text-[#00FFD1]",
-                    "border border-[#00FFD1]/20",
-                    "text-xs font-medium font-poppins",
-                    "hover:bg-[#00FFD1]/20 transition-colors duration-200"
-                  )}
-                >
-                  {filter}
-                </Link>
-              ))}
-            </div>
           </div>
 
-          {/* Floating Meal Card */}
           {heroMeal && (
             <div className="hidden md:flex justify-end">
               <div
                 className={cn(
                   "w-72 rounded-3xl p-4",
                   "bg-white/5 backdrop-blur-xl",
-                  "border border-white/10",
-                  "shadow-card",
-                  "animate-bounce-slow"
+                  "border border-white/10 shadow-card"
                 )}
-                style={{
-                  animation: "float 6s ease-in-out infinite",
-                }}
+                style={{ animation: "float 6s ease-in-out infinite" }}
               >
                 <div className="relative h-52 rounded-2xl overflow-hidden mb-4">
                   <Image
@@ -244,8 +210,7 @@ export default function HomePage() {
                 <Link
                   href={`/meal/${heroMeal.idMeal}`}
                   className={cn(
-                    "block w-full text-center",
-                    "py-2.5 rounded-pill",
+                    "block w-full text-center py-2.5 rounded-pill",
                     "bg-[#FF6B2C] text-white",
                     "text-sm font-semibold font-poppins",
                     "hover:brightness-110 transition-all duration-200",
@@ -259,7 +224,6 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 animate-bounce">
           <p className="text-[#9E9E9E] text-xs font-poppins">Scroll to explore</p>
           <ChevronDown size={20} className="text-[#9E9E9E]" />
@@ -270,7 +234,6 @@ export default function HomePage() {
       {motdMeal && (
         <section className="max-w-7xl mx-auto px-6 py-24">
           <div className="grid md:grid-cols-2 gap-0 bg-[#1A1A1A] rounded-[40px] overflow-hidden border border-white/5 shadow-card">
-            {/* Image */}
             <div className="relative h-80 md:h-auto min-h-[400px]">
               <Image
                 src={`${motdMeal.strMealThumb}/large`}
@@ -279,11 +242,9 @@ export default function HomePage() {
                 className="object-cover"
               />
             </div>
-
-            {/* Content */}
             <div className="p-8 md:p-12 space-y-6 flex flex-col justify-center">
               <span className="text-[#FF6B2C] font-bold tracking-widest uppercase text-xs font-poppins">
-                🍽️ Today&apos;s Special
+                Meal of the Day
               </span>
               <h2 className="font-bold text-white font-poppins text-3xl md:text-4xl leading-tight">
                 {motdMeal.strMeal}
@@ -306,8 +267,7 @@ export default function HomePage() {
                   "px-8 py-3.5 rounded-pill",
                   "bg-[#FF6B2C] text-white",
                   "font-semibold text-sm font-poppins",
-                  "hover:brightness-110 hover:scale-105",
-                  "active:scale-95",
+                  "hover:brightness-110 hover:scale-105 active:scale-95",
                   "transition-all duration-200",
                   "shadow-[0_0_20px_rgba(255,107,44,0.4)]"
                 )}
@@ -322,28 +282,20 @@ export default function HomePage() {
       {/* ===== WHAT ARE YOU CRAVING ===== */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <SectionHeader title="What Are You Craving?" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categories.slice(0, 7).map((cat, i) => (
-            <div
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {categories.map((cat) => (
+            <CategoryCard
               key={cat.idCategory}
-              className={cn(
-                i === 0 && "col-span-2 row-span-2",
-                i === 6 && "col-span-2"
-              )}
-            >
-              <CategoryCard
-                name={cat.strCategory}
-                thumbnail={cat.strCategoryThumb}
-                description={cat.strCategoryDescription}
-                large={i === 0}
-              />
-            </div>
+              name={cat.strCategory}
+              thumbnail={cat.strCategoryThumb}
+              description={cat.strCategoryDescription}
+            />
           ))}
         </div>
       </section>
 
       {/* ===== FOOD AROUND THE WORLD ===== */}
-      <section className="bg-[#0A0A0A] py-24">
+      <section ref={areasSectionRef} className="bg-[#0A0A0A] py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div>
@@ -354,13 +306,14 @@ export default function HomePage() {
                 Explore cuisines from every corner of the globe
               </p>
             </div>
-
-            {/* Area Search */}
             <div className="relative w-full md:w-64">
               <input
                 type="text"
                 value={areaSearch}
-                onChange={(e) => setAreaSearch(e.target.value)}
+                onChange={(e) => {
+                  setAreaSearch(e.target.value);
+                  setShowAllAreas(true);
+                }}
                 placeholder="Search country..."
                 className={cn(
                   "w-full rounded-pill",
@@ -376,34 +329,57 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Countries Grid */}
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-            {filteredAreas.map((area) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
+            {displayedAreas.map((area) => (
               <Link
                 key={area.strArea}
                 href={`/areas/${area.strArea}`}
                 className={cn(
-                  "group flex flex-col items-center gap-3 p-4",
+                  "group flex flex-col items-center gap-2 p-4",
                   "rounded-2xl",
                   "bg-[#1A1A1A] border border-white/5",
-                  "hover:border-[#FF6B2C]/30 hover:bg-[#1A1A1A]/80",
+                  "hover:border-[#FF6B2C]/30 hover:bg-[#242424]",
                   "transition-all duration-300 cursor-pointer"
                 )}
               >
-                <span className="text-4xl">
-                  {COUNTRY_FLAGS[area.strArea] || "🌍"}
+                <span className={cn(
+                  "text-2xl font-bold font-poppins",
+                  "text-white/20 group-hover:text-[#FF6B2C]/60",
+                  "transition-colors duration-300"
+                )}>
+                  {area.strArea.slice(0, 2).toUpperCase()}
                 </span>
-                <p
-                  className={cn(
-                    "text-xs font-medium text-[#E0E0E0] font-poppins text-center",
-                    "group-hover:text-[#FF6B2C] transition-colors duration-200"
-                  )}
-                >
+                <p className={cn(
+                  "text-xs font-medium text-[#E0E0E0] font-poppins text-center",
+                  "group-hover:text-[#FF6B2C] transition-colors duration-200"
+                )}>
                   {area.strArea}
                 </p>
               </Link>
             ))}
           </div>
+
+          {filteredAreas.length > AREAS_LIMIT && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={showAllAreas ? handleShowLess : () => setShowAllAreas(true)}
+                className={cn(
+                  "flex items-center gap-2",
+                  "px-6 py-3 rounded-pill",
+                  "bg-[#1A1A1A] border border-white/10",
+                  "text-sm font-semibold text-[#E0E0E0] font-poppins",
+                  "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
+                  "transition-all duration-200"
+                )}
+              >
+                {showAllAreas ? (
+                  <>Show Less <ChevronUp size={14} /></>
+                ) : (
+                  <>Show All {filteredAreas.length} Countries <ChevronDown size={14} /></>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -431,9 +407,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {loadingRandom
-            ? Array.from({ length: 6 }).map((_, i) => (
-                <MealCardSkeleton key={i} />
-              ))
+            ? Array.from({ length: 6 }).map((_, i) => <MealCardSkeleton key={i} />)
             : randomMeals.map((meal) => (
                 <MealCard
                   key={meal.idMeal}
@@ -455,7 +429,7 @@ export default function HomePage() {
             {ingredients.map((ing) => (
               <Link
                 key={ing.idIngredient}
-                href={`/ingredients/${ing.strIngredient}`}
+                href={`/ingredients/${encodeURIComponent(ing.strIngredient)}`}
                 className={cn(
                   "flex items-center gap-2",
                   "px-5 py-2.5 rounded-pill",
@@ -466,7 +440,7 @@ export default function HomePage() {
                 )}
               >
                 <Image
-                  src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient}-small.png`}
+                  src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient.replace(/ /g, "_")}-small.png`}
                   alt={ing.strIngredient}
                   width={20}
                   height={20}
@@ -490,7 +464,7 @@ export default function HomePage() {
               className={cn(
                 "aspect-square flex items-center justify-center",
                 "rounded-xl",
-                "text-xl font-bold font-poppins text-white",
+                "text-xl font-bold font-poppins",
                 "border border-white/5",
                 LETTER_COLORS[i % LETTER_COLORS.length],
                 "hover:scale-110 hover:border-[#FF6B2C]/50",
@@ -532,8 +506,7 @@ export default function HomePage() {
               "bg-white text-[#FF6B2C]",
               "font-bold text-xl font-poppins",
               "hover:scale-105 active:scale-95",
-              "transition-all duration-200",
-              "shadow-xl"
+              "transition-all duration-200 shadow-xl"
             )}
           >
             Surprise Me 🎲
@@ -541,7 +514,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Float animation */}
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
