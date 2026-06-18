@@ -90,11 +90,18 @@ export default function MealDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    const fetchRelated = async () => {
+   const fetchRelated = async () => {
       setLoadingRelated(true);
       const promises = Array.from({ length: 4 }, () => getRandomMeal());
       const results = await Promise.all(promises);
-      setRelatedMeals(results.filter(Boolean) as Meal[]);
+      const unique = Array.from(
+        new Map(
+          results
+            .filter(Boolean)
+            .map((meal) => [meal!.idMeal, meal])
+        ).values()
+      ) as Meal[];
+      setRelatedMeals(unique);
       setLoadingRelated(false);
     };
     fetchRelated();

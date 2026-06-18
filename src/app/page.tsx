@@ -77,14 +77,21 @@ export default function HomePage() {
   }, []);
 
   // Fetch 6 random meals
-  const fetchRandomMeals = async () => {
+ const fetchRandomMeals = async () => {
     setLoadingRandom(true);
     const promises = Array.from({ length: 6 }, () => getRandomMeal());
     const results = await Promise.all(promises);
-    setRandomMeals(results.filter(Boolean) as Meal[]);
+    const unique = Array.from(
+      new Map(
+        results
+          .filter(Boolean)
+          .map((meal) => [meal!.idMeal, meal])
+      ).values()
+    ) as Meal[];
+    setRandomMeals(unique);
     setLoadingRandom(false);
   };
-
+  
   useEffect(() => {
     fetchRandomMeals();
   }, []);

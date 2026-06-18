@@ -184,9 +184,9 @@ export default function SurprisePage() {
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {ingredients.map(({ ingredient, measure }) => (
-                  <div
-                    key={ingredient}
+               {ingredients.map(({ ingredient, measure }, index) => (
+  <div
+    key={`${ingredient}-${index}`}
                     className={cn(
                       "flex flex-col items-center gap-2 p-4",
                       "bg-[#1A1A1A] rounded-2xl",
