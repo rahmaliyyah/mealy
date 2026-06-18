@@ -1,65 +1,546 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Shuffle, Search, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  getRandomMeal,
+  getCategories,
+  getAreas,
+  getIngredientsList,
+  getMealsByLetter,
+  type Meal,
+  type Category,
+  type Area,
+  type Ingredient,
+} from "@/lib/api";
+import MealCard from "@/components/cards/MealCard";
+import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
+import CategoryCard from "@/components/cards/CategoryCard";
+import SectionHeader from "@/components/ui/SectionHeader";
+
+const QUICK_FILTERS = ["Chicken", "Seafood", "Pasta", "Dessert", "Beef"];
+
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+const LETTER_COLORS = [
+  "bg-[#FF6B2C]", "bg-[#FFB800]", "bg-[#00FFD1]/20 text-[#00FFD1]",
+  "bg-[#FF6B2C]/20 text-[#FF6B2C]", "bg-[#FFB800]/20 text-[#FFB800]",
+  "bg-[#FF1F1F]/20 text-[#FF1F1F]", "bg-[#00E65C]/20 text-[#00E65C]",
+];
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  American: "🇺🇸", British: "🇬🇧", Canadian: "🇨🇦", Chinese: "🇨🇳",
+  Croatian: "🇭🇷", Dutch: "🇳🇱", Egyptian: "🇪🇬", Filipino: "🇵🇭",
+  French: "🇫🇷", Greek: "🇬🇷", Indian: "🇮🇳", Irish: "🇮🇪",
+  Italian: "🇮🇹", Jamaican: "🇯🇲", Japanese: "🇯🇵", Kenyan: "🇰🇪",
+  Malaysian: "🇲🇾", Mexican: "🇲🇽", Moroccan: "🇲🇦", Polish: "🇵🇱",
+  Portuguese: "🇵🇹", Russian: "🇷🇺", Spanish: "🇪🇸", Thai: "🇹🇭",
+  Tunisian: "🇹🇳", Turkish: "🇹🇷", Ukrainian: "🇺🇦", Vietnamese: "🇻🇳",
+};
+
+export default function HomePage() {
+  const [heroMeal, setHeroMeal] = useState<Meal | null>(null);
+  const [motdMeal, setMotdMeal] = useState<Meal | null>(null);
+  const [randomMeals, setRandomMeals] = useState<Meal[]>([]);
+  const [loadingRandom, setLoadingRandom] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [areaSearch, setAreaSearch] = useState("");
+
+  // Fetch hero meal
+  useEffect(() => {
+    getRandomMeal().then(setHeroMeal);
+  }, []);
+
+  // Fetch meal of the day (localStorage based)
+  useEffect(() => {
+    const stored = localStorage.getItem("mealy_motd");
+    const storedDate = localStorage.getItem("mealy_motd_date");
+    const today = new Date().toDateString();
+
+    if (stored && storedDate === today) {
+      setMotdMeal(JSON.parse(stored));
+    } else {
+      getRandomMeal().then((meal) => {
+        if (meal) {
+          localStorage.setItem("mealy_motd", JSON.stringify(meal));
+          localStorage.setItem("mealy_motd_date", today);
+          setMotdMeal(meal);
+        }
+      });
+    }
+  }, []);
+
+  // Fetch 6 random meals
+  const fetchRandomMeals = async () => {
+    setLoadingRandom(true);
+    const promises = Array.from({ length: 6 }, () => getRandomMeal());
+    const results = await Promise.all(promises);
+    setRandomMeals(results.filter(Boolean) as Meal[]);
+    setLoadingRandom(false);
+  };
+
+  useEffect(() => {
+    fetchRandomMeals();
+  }, []);
+
+  // Fetch categories, areas, ingredients
+  useEffect(() => {
+    getCategories().then(setCategories);
+    getAreas().then(setAreas);
+    getIngredientsList().then((list) => setIngredients(list.slice(0, 20)));
+  }, []);
+
+ const filteredAreas = Array.from(
+  new Map(
+    areas
+      .filter((a) => a.strArea.toLowerCase().includes(areaSearch.toLowerCase()))
+      .map((a) => [a.strArea, a])
+  ).values()
+);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+    <div className="bg-[#0F0F0F] min-h-screen">
+
+      {/* ===== HERO SECTION ===== */}
+      <section className="relative w-full h-screen flex items-center overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 z-0">
+          {heroMeal && (
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              src={`${heroMeal.strMealThumb}/large`}
+              alt={heroMeal.strMeal}
+              fill
+              className="object-cover"
+              priority
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0F0F0F] via-[#0F0F0F]/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-transparent to-[#0F0F0F]/30" />
         </div>
-      </main>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full grid md:grid-cols-2 gap-12 items-center">
+          <div className="space-y-8">
+            <h1
+              className={cn(
+                "font-bold text-white font-poppins",
+                "text-4xl md:text-6xl leading-tight"
+              )}
+            >
+              Discover Your Next{" "}
+              <span className="text-[#FF6B2C]">Favorite Meal</span>
+            </h1>
+
+            <p className="text-[#9E9E9E] text-lg font-poppins max-w-md">
+              Explore thousands of recipes from around the world. Find your next culinary adventure.
+            </p>
+
+            {/* Search Bar */}
+            <form onSubmit={handleSearch} className="relative max-w-md">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search any meal..."
+                className={cn(
+                  "w-full rounded-pill",
+                  "bg-white/10 backdrop-blur-sm",
+                  "border border-white/10",
+                  "px-6 py-4 pr-14",
+                  "text-white placeholder:text-[#9E9E9E]",
+                  "font-poppins text-sm",
+                  "outline-none focus:border-[#FF6B2C]",
+                  "transition-colors duration-200"
+                )}
+              />
+              <button
+                type="submit"
+                className={cn(
+                  "absolute right-2 top-1/2 -translate-y-1/2",
+                  "w-10 h-10 rounded-full",
+                  "bg-[#FF6B2C] text-white",
+                  "flex items-center justify-center",
+                  "hover:brightness-110 transition-all duration-200"
+                )}
+              >
+                <Search size={16} />
+              </button>
+            </form>
+
+            {/* Quick Filters */}
+            <div className="flex flex-wrap gap-2">
+              {QUICK_FILTERS.map((filter) => (
+                <Link
+                  key={filter}
+                  href={`/categories/${filter}`}
+                  className={cn(
+                    "px-4 py-2 rounded-pill",
+                    "bg-[#00FFD1]/10 text-[#00FFD1]",
+                    "border border-[#00FFD1]/20",
+                    "text-xs font-medium font-poppins",
+                    "hover:bg-[#00FFD1]/20 transition-colors duration-200"
+                  )}
+                >
+                  {filter}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Floating Meal Card */}
+          {heroMeal && (
+            <div className="hidden md:flex justify-end">
+              <div
+                className={cn(
+                  "w-72 rounded-3xl p-4",
+                  "bg-white/5 backdrop-blur-xl",
+                  "border border-white/10",
+                  "shadow-card",
+                  "animate-bounce-slow"
+                )}
+                style={{
+                  animation: "float 6s ease-in-out infinite",
+                }}
+              >
+                <div className="relative h-52 rounded-2xl overflow-hidden mb-4">
+                  <Image
+                    src={`${heroMeal.strMealThumb}/medium`}
+                    alt={heroMeal.strMeal}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <h4 className="font-semibold text-white font-poppins text-base mb-2 line-clamp-1">
+                  {heroMeal.strMeal}
+                </h4>
+                <div className="flex gap-2 mb-4">
+                  <span className="px-3 py-1 rounded-badge bg-[#FF6B2C]/10 text-[#FF6B2C] text-xs font-semibold font-poppins">
+                    {heroMeal.strCategory}
+                  </span>
+                  <span className="px-3 py-1 rounded-badge bg-[#00FFD1]/10 text-[#00FFD1] text-xs font-semibold font-poppins">
+                    {heroMeal.strArea}
+                  </span>
+                </div>
+                <Link
+                  href={`/meal/${heroMeal.idMeal}`}
+                  className={cn(
+                    "block w-full text-center",
+                    "py-2.5 rounded-pill",
+                    "bg-[#FF6B2C] text-white",
+                    "text-sm font-semibold font-poppins",
+                    "hover:brightness-110 transition-all duration-200",
+                    "shadow-[0_0_20px_rgba(255,107,44,0.3)]"
+                  )}
+                >
+                  View Recipe
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 animate-bounce">
+          <p className="text-[#9E9E9E] text-xs font-poppins">Scroll to explore</p>
+          <ChevronDown size={20} className="text-[#9E9E9E]" />
+        </div>
+      </section>
+
+      {/* ===== MEAL OF THE DAY ===== */}
+      {motdMeal && (
+        <section className="max-w-7xl mx-auto px-6 py-24">
+          <div className="grid md:grid-cols-2 gap-0 bg-[#1A1A1A] rounded-[40px] overflow-hidden border border-white/5 shadow-card">
+            {/* Image */}
+            <div className="relative h-80 md:h-auto min-h-[400px]">
+              <Image
+                src={`${motdMeal.strMealThumb}/large`}
+                alt={motdMeal.strMeal}
+                fill
+                className="object-cover"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="p-8 md:p-12 space-y-6 flex flex-col justify-center">
+              <span className="text-[#FF6B2C] font-bold tracking-widest uppercase text-xs font-poppins">
+                🍽️ Today&apos;s Special
+              </span>
+              <h2 className="font-bold text-white font-poppins text-3xl md:text-4xl leading-tight">
+                {motdMeal.strMeal}
+              </h2>
+              <div className="flex gap-2 flex-wrap">
+                <span className="px-3 py-1 rounded-badge bg-[#FF6B2C]/10 text-[#FF6B2C] text-xs font-semibold font-poppins">
+                  {motdMeal.strCategory}
+                </span>
+                <span className="px-3 py-1 rounded-badge bg-[#00FFD1]/10 text-[#00FFD1] text-xs font-semibold font-poppins">
+                  {motdMeal.strArea}
+                </span>
+              </div>
+              <p className="text-[#9E9E9E] text-sm font-poppins leading-relaxed line-clamp-4">
+                {motdMeal.strInstructions}
+              </p>
+              <Link
+                href={`/meal/${motdMeal.idMeal}`}
+                className={cn(
+                  "inline-flex items-center gap-2 w-fit",
+                  "px-8 py-3.5 rounded-pill",
+                  "bg-[#FF6B2C] text-white",
+                  "font-semibold text-sm font-poppins",
+                  "hover:brightness-110 hover:scale-105",
+                  "active:scale-95",
+                  "transition-all duration-200",
+                  "shadow-[0_0_20px_rgba(255,107,44,0.4)]"
+                )}
+              >
+                View Full Recipe
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ===== WHAT ARE YOU CRAVING ===== */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <SectionHeader title="What Are You Craving?" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {categories.slice(0, 7).map((cat, i) => (
+            <div
+              key={cat.idCategory}
+              className={cn(
+                i === 0 && "col-span-2 row-span-2",
+                i === 6 && "col-span-2"
+              )}
+            >
+              <CategoryCard
+                name={cat.strCategory}
+                thumbnail={cat.strCategoryThumb}
+                description={cat.strCategoryDescription}
+                large={i === 0}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== FOOD AROUND THE WORLD ===== */}
+      <section className="bg-[#0A0A0A] py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+              <h2 className="font-bold text-white font-poppins text-3xl md:text-4xl">
+                Food Around The World
+              </h2>
+              <p className="mt-2 text-[#9E9E9E] text-sm font-poppins">
+                Explore cuisines from every corner of the globe
+              </p>
+            </div>
+
+            {/* Area Search */}
+            <div className="relative w-full md:w-64">
+              <input
+                type="text"
+                value={areaSearch}
+                onChange={(e) => setAreaSearch(e.target.value)}
+                placeholder="Search country..."
+                className={cn(
+                  "w-full rounded-pill",
+                  "bg-white/5 border border-white/10",
+                  "px-5 py-3 pr-10",
+                  "text-white placeholder:text-[#9E9E9E]",
+                  "font-poppins text-sm",
+                  "outline-none focus:border-[#FF6B2C]",
+                  "transition-colors duration-200"
+                )}
+              />
+              <Search size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9E9E9E]" />
+            </div>
+          </div>
+
+          {/* Countries Grid */}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+            {filteredAreas.map((area) => (
+              <Link
+                key={area.strArea}
+                href={`/areas/${area.strArea}`}
+                className={cn(
+                  "group flex flex-col items-center gap-3 p-4",
+                  "rounded-2xl",
+                  "bg-[#1A1A1A] border border-white/5",
+                  "hover:border-[#FF6B2C]/30 hover:bg-[#1A1A1A]/80",
+                  "transition-all duration-300 cursor-pointer"
+                )}
+              >
+                <span className="text-4xl">
+                  {COUNTRY_FLAGS[area.strArea] || "🌍"}
+                </span>
+                <p
+                  className={cn(
+                    "text-xs font-medium text-[#E0E0E0] font-poppins text-center",
+                    "group-hover:text-[#FF6B2C] transition-colors duration-200"
+                  )}
+                >
+                  {area.strArea}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== YOU MIGHT LIKE THESE ===== */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <SectionHeader
+          title="You Might Like These"
+          subtitle="Random picks refreshed just for you"
+        >
+          <button
+            onClick={fetchRandomMeals}
+            className={cn(
+              "flex items-center gap-2",
+              "px-5 py-2.5 rounded-pill",
+              "bg-[#1A1A1A] border border-white/10",
+              "text-sm font-semibold text-white font-poppins",
+              "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
+              "transition-all duration-200"
+            )}
+          >
+            <Shuffle size={14} />
+            Shuffle
+          </button>
+        </SectionHeader>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {loadingRandom
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <MealCardSkeleton key={i} />
+              ))
+            : randomMeals.map((meal) => (
+                <MealCard
+                  key={meal.idMeal}
+                  id={meal.idMeal}
+                  name={meal.strMeal}
+                  thumbnail={meal.strMealThumb}
+                  category={meal.strCategory}
+                  area={meal.strArea}
+                />
+              ))}
+        </div>
+      </section>
+
+      {/* ===== SEARCH BY INGREDIENT ===== */}
+      <section className="bg-[#0A0A0A] py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <SectionHeader title="Search by Ingredient" centered />
+          <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+            {ingredients.map((ing) => (
+              <Link
+                key={ing.idIngredient}
+                href={`/ingredients/${ing.strIngredient}`}
+                className={cn(
+                  "flex items-center gap-2",
+                  "px-5 py-2.5 rounded-pill",
+                  "bg-[#1A1A1A] border border-white/5",
+                  "text-sm font-medium text-[#E0E0E0] font-poppins",
+                  "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
+                  "transition-all duration-200"
+                )}
+              >
+                <Image
+                  src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient}-small.png`}
+                  alt={ing.strIngredient}
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
+                {ing.strIngredient}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== EXPLORE ALPHABETICALLY ===== */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <SectionHeader title="Explore Alphabetically" />
+        <div className="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-13 gap-3">
+          {LETTERS.map((letter, i) => (
+            <Link
+              key={letter}
+              href={`/az?letter=${letter}`}
+              className={cn(
+                "aspect-square flex items-center justify-center",
+                "rounded-xl",
+                "text-xl font-bold font-poppins text-white",
+                "border border-white/5",
+                LETTER_COLORS[i % LETTER_COLORS.length],
+                "hover:scale-110 hover:border-[#FF6B2C]/50",
+                "transition-all duration-200"
+              )}
+            >
+              {letter}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== CTA BANNER ===== */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div
+          className={cn(
+            "relative overflow-hidden",
+            "bg-[#FF6B2C] rounded-[40px]",
+            "p-12 md:p-20",
+            "flex flex-col md:flex-row items-center justify-between gap-8"
+          )}
+        >
+          <div className="absolute inset-0 opacity-10">
+            <div className="w-full h-full bg-[radial-gradient(circle_at_30%_50%,_white,_transparent_70%)]" />
+          </div>
+          <div className="relative z-10 space-y-4 text-center md:text-left">
+            <h2 className="font-bold text-white font-poppins text-4xl md:text-5xl">
+              Feeling Adventurous?
+            </h2>
+            <p className="text-white/80 font-poppins text-lg max-w-xl">
+              Not sure what to cook tonight? Let us pick a random recipe just for you!
+            </p>
+          </div>
+          <Link
+            href="/surprise"
+            className={cn(
+              "relative z-10 flex-shrink-0",
+              "px-10 py-5 rounded-pill",
+              "bg-white text-[#FF6B2C]",
+              "font-bold text-xl font-poppins",
+              "hover:scale-105 active:scale-95",
+              "transition-all duration-200",
+              "shadow-xl"
+            )}
+          >
+            Surprise Me 🎲
+          </Link>
+        </div>
+      </section>
+
+      {/* Float animation */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+      `}</style>
     </div>
   );
 }
