@@ -93,7 +93,6 @@ export default function AreaDetailPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
             <div className="flex items-center gap-4 mb-3">
-              <span className="text-5xl">{COUNTRY_FLAGS[name] || "🌍"}</span>
               <div>
                 <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-1">
                   Cuisine

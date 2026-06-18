@@ -114,49 +114,19 @@ export default function AreasPage() {
                   "min-h-[176px]"
                 )}
               >
-                {/* Left accent border on hover */}
-                <div
-                  className={cn(
-                    "absolute left-0 top-0 bottom-0 w-1",
-                    "bg-[#FF6B2C] rounded-l-2xl",
-                    "opacity-0 group-hover:opacity-100",
-                    "transition-opacity duration-300"
-                  )}
-                />
-
-                {/* Country Code */}
-                <span
-                  className={cn(
-                    "text-4xl font-bold font-poppins",
-                    "text-white/20 group-hover:text-white/40",
-                    "transition-colors duration-300",
-                    "tracking-wider"
-                  )}
-                >
-                  {COUNTRY_CODES[area.strArea] || area.strArea.slice(0, 2).toUpperCase()}
-                </span>
-
-                {/* Flag + Name */}
+        
+                {/* Country Name */}
                 <div className="text-center space-y-1">
                   <p className="font-bold text-white font-poppins text-base group-hover:text-[#FF6B2C] transition-colors duration-200">
                     {area.strArea}
                   </p>
-                  <span
-                    className={cn(
-                      "inline-block px-3 py-1 rounded-pill",
-                      "bg-[#00FFD1]/10 text-[#00FFD1]",
-                      "text-[10px] font-bold font-poppins uppercase tracking-wider"
-                    )}
-                  >
-                    {COUNTRY_FLAGS[area.strArea] || "🌍"} Explore
-                  </span>
+                 
                 </div>
               </Link>
             ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <span className="text-5xl">🌍</span>
             <p className="font-bold text-white font-poppins text-xl">
               No areas found
             </p>
