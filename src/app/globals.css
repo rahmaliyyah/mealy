@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Colors */
+  --color-background-primary: #0F0F0F;
+  --color-background-card: #1A1A1A;
+  --color-background-hover: #242424;
+  --color-primary: #FF6B2C;
+  --color-secondary: #FFB800;
+  --color-teal: #00FFD1;
+  --color-error: #FF1F1F;
+  --color-success: #00E65C;
+  --color-text-primary: #FFFFFF;
+  --color-text-body: #E0E0E0;
+  --color-text-subtle: #9E9E9E;
+
+  /* Font */
+  --font-poppins: "Poppins", sans-serif;
+
+  /* Border Radius */
+  --radius-pill: 9999px;
+  --radius-card: 20px;
+  --radius-button: 14px;
+  --radius-badge: 999px;
+  --radius-input: 12px;
+
+  /* Shadows */
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-navbar: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 20px rgba(255,107,44,0.4);
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+  --spacing-4xl: 96px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #0F0F0F;
+  color: #FFFFFF;
+  font-family: var(--font-poppins), sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1A1A1A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FF6B2C;
+  border-radius: 9999px;
 }
