@@ -44,45 +44,30 @@ export default function Navbar() {
     <>
       <nav
         className={cn(
-          // Layout
           "fixed top-4 left-1/2 -translate-x-1/2 z-50",
           "w-[calc(100%-2rem)] max-w-6xl",
-          // Shape
           "rounded-pill",
-          // Surface
           "border border-white/10",
-          // Spacing
           "px-6 py-3",
-          // Flex
           "flex items-center justify-between gap-4",
-          // Transition
           "transition-all duration-300",
-          // Conditional scroll
           scrolled
             ? "bg-[rgba(26,26,26,0.95)] shadow-navbar backdrop-blur-xl"
             : "bg-[rgba(255,255,255,0.05)] backdrop-blur-xl shadow-navbar"
         )}
       >
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
+        {/* Logo Only */}
+        <Link href="/" className="flex items-center flex-shrink-0">
           <Image
             src="/assets/logo.svg"
             alt="Mealy Logo"
-            width={32}
-            height={32}
+            width={36}
+            height={36}
           />
-          <span
-            className={cn(
-              "font-bold text-xl text-white",
-              "font-poppins tracking-tight"
-            )}
-          >
-            Mealy
-          </span>
         </Link>
 
         {/* Desktop Nav */}
-        <div className={cn("hidden md:flex items-center gap-6")}>
+        <div className="hidden md:flex items-center gap-6">
           {navLinks.map((link) =>
             link.dropdown ? (
               <div
@@ -94,7 +79,7 @@ export default function Navbar() {
                 <button
                   className={cn(
                     "flex items-center gap-1",
-                    "text-[#E0E0E0] hover:text-primary",
+                    "text-[#E0E0E0] hover:text-[#FF6B2C]",
                     "font-medium text-sm font-poppins",
                     "transition-colors duration-200"
                   )}
@@ -109,25 +94,16 @@ export default function Navbar() {
                   />
                 </button>
 
-                {/* Dropdown */}
                 {browseOpen && (
                   <div
                     className={cn(
-                      // Position
                       "absolute top-full left-1/2 -translate-x-1/2 mt-3",
-                      // Size
                       "w-48",
-                      // Shape
                       "rounded-2xl",
-                      // Surface glassmorphism
-                      "bg-[rgba(255,255,255,0.05)] backdrop-blur-xl",
+                      "bg-[rgba(26,26,26,0.95)] backdrop-blur-xl",
                       "border border-white/10",
-                      // Shadow
                       "shadow-card",
-                      // Padding
-                      "p-2",
-                      // Animation
-                      "animate-in fade-in slide-in-from-top-2 duration-200"
+                      "p-2"
                     )}
                   >
                     {link.dropdown.map((item) => (
@@ -153,7 +129,7 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 className={cn(
-                  "text-[#E0E0E0] hover:text-primary",
+                  "text-[#E0E0E0] hover:text-[#FF6B2C]",
                   "font-medium text-sm font-poppins",
                   "transition-colors duration-200"
                 )}
@@ -165,16 +141,17 @@ export default function Navbar() {
         </div>
 
         {/* Right Side */}
-        <div className={cn("flex items-center gap-3")}>
+        <div className="flex items-center gap-3">
           {/* Search */}
           <form onSubmit={handleSearch}>
             <div
               className={cn(
                 "flex items-center",
                 "rounded-pill overflow-hidden",
-                "border border-white/10",
                 "transition-all duration-300",
-                searchOpen ? "w-48 bg-[rgba(255,255,255,0.08)]" : "w-9 bg-transparent border-transparent"
+                searchOpen
+                  ? "w-48 bg-[rgba(255,255,255,0.08)] border border-white/10"
+                  : "w-9 bg-transparent"
               )}
             >
               <button
@@ -211,21 +188,15 @@ export default function Navbar() {
           <Link
             href="/surprise"
             className={cn(
-              // Layout
               "hidden md:flex items-center gap-2",
-              // Spacing
               "px-5 py-2.5",
-              // Shape
               "rounded-pill",
-              // Colors
-              "bg-primary text-white",
-              // Typography
-              "text-sm font-semibold font-poppins",
-              // Effects
-              "shadow-glow",
+              "bg-[#FF6B2C] text-white",
+              "text-sm font-semibold font-poppins whitespace-nowrap",
               "hover:brightness-110 hover:scale-105",
               "active:scale-95",
-              "transition-all duration-200"
+              "transition-all duration-200",
+              "shadow-[0_0_20px_rgba(255,107,44,0.4)]"
             )}
           >
             <Shuffle size={14} />
@@ -259,11 +230,7 @@ export default function Navbar() {
           {navLinks.map((link) =>
             link.dropdown ? (
               <div key={link.label} className="text-center space-y-4">
-                <p
-                  className={cn(
-                    "text-[#9E9E9E] text-sm font-poppins uppercase tracking-widest"
-                  )}
-                >
+                <p className="text-[#9E9E9E] text-sm font-poppins uppercase tracking-widest">
                   {link.label}
                 </p>
                 {link.dropdown.map((item) => (
@@ -273,7 +240,7 @@ export default function Navbar() {
                     onClick={() => setMobileOpen(false)}
                     className={cn(
                       "block text-2xl font-bold text-white font-poppins",
-                      "hover:text-primary transition-colors duration-200"
+                      "hover:text-[#FF6B2C] transition-colors duration-200"
                     )}
                   >
                     {item.label}
@@ -287,7 +254,7 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "text-3xl font-bold text-white font-poppins",
-                  "hover:text-primary transition-colors duration-200"
+                  "hover:text-[#FF6B2C] transition-colors duration-200"
                 )}
               >
                 {link.label}
@@ -299,9 +266,9 @@ export default function Navbar() {
             onClick={() => setMobileOpen(false)}
             className={cn(
               "mt-4 px-8 py-4 rounded-pill",
-              "bg-primary text-white",
+              "bg-[#FF6B2C] text-white",
               "text-lg font-bold font-poppins",
-              "shadow-glow",
+              "shadow-[0_0_20px_rgba(255,107,44,0.4)]",
               "flex items-center gap-2"
             )}
           >
