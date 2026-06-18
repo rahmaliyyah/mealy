@@ -236,9 +236,9 @@ export default function MealDetailPage() {
                 </p>
               </div>
               <ul className="p-4 space-y-1 max-h-[600px] overflow-y-auto">
-                {ingredients.map(({ ingredient, measure }) => (
-                  <IngredientItem
-                    key={ingredient}
+               {ingredients.map(({ ingredient, measure }, index) => (
+  <IngredientItem
+    key={`${ingredient}-${index}`}
                     ingredient={ingredient}
                     measure={measure}
                   />

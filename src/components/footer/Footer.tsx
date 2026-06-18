@@ -13,23 +13,38 @@ export default function Footer() {
   return (
     <footer className={cn("bg-[#0A0A0A]", "border-t border-white/5")}>
       <div
-        className={cn(
-          "max-w-7xl mx-auto",
-          "px-6 py-12",
-          "flex flex-col md:flex-row justify-between items-center gap-6"
-        )}
+        style={{
+          maxWidth: "80rem",
+          margin: "0 auto",
+          padding: "48px 24px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "24px",
+        }}
       >
-        <div className={cn("flex flex-col items-center md:items-start gap-2")}>
-          <div className="flex items-center gap-2">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
             <Image
               src="/assets/logo.svg"
               alt="Mealy Logo"
               width={28}
               height={28}
             />
-            <span className={cn("font-bold text-lg text-white font-poppins")}>
-              Mealy
-            </span>
+
           </div>
 
           <p className={cn("text-xs text-[#9E9E9E] font-poppins")}>
@@ -49,7 +64,14 @@ export default function Footer() {
           </p>
         </div>
 
-        <div className={cn("flex flex-wrap justify-center gap-6")}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "24px",
+          }}
+        >
           {footerLinks.map((link) => (
             <Link
               key={link.label}
