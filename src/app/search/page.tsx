@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, SlidersHorizontal, X, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   searchMealByName,
@@ -21,6 +21,7 @@ import MealCard from "@/components/cards/MealCard";
 import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const ITEMS_PER_PAGE = 8;
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -39,6 +40,7 @@ export default function SearchPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [filterMode, setFilterMode] = useState<"search" | "letter" | "category" | "area" | "ingredient">("search");
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     getCategories().then(setCategories);
@@ -54,6 +56,7 @@ export default function SearchPage() {
     if (!query) return;
     setLoading(true);
     setFilterMode("search");
+    setCurrentPage(1);
     searchMealByName(query).then((data) => {
       setResults(data);
       setLoading(false);
@@ -71,6 +74,7 @@ export default function SearchPage() {
     if (selectedCategory === cat) {
       setSelectedCategory("");
       setFilterMode("search");
+      setCurrentPage(1);
       if (query) {
         setLoading(true);
         const data = await searchMealByName(query);
@@ -84,6 +88,7 @@ export default function SearchPage() {
     setSelectedLetter("");
     setIngredientSearch("");
     setFilterMode("category");
+    setCurrentPage(1);
     setLoading(true);
     const previews = await getMealsByCategory(cat);
     const details = await Promise.all(
@@ -100,6 +105,7 @@ export default function SearchPage() {
     setIngredientSearch("");
     setFilterMode("area");
     setShowAreaDropdown(false);
+    setCurrentPage(1);
     setLoading(true);
     const previews = await getMealsByArea(area);
     const details = await Promise.all(
@@ -113,6 +119,7 @@ export default function SearchPage() {
     if (selectedLetter === letter) {
       setSelectedLetter("");
       setFilterMode("search");
+      setCurrentPage(1);
       return;
     }
     setSelectedLetter(letter);
@@ -120,6 +127,7 @@ export default function SearchPage() {
     setSelectedArea("");
     setIngredientSearch("");
     setFilterMode("letter");
+    setCurrentPage(1);
     setLoading(true);
     const data = await getMealsByLetter(letter.toLowerCase());
     setResults(data);
@@ -133,6 +141,7 @@ export default function SearchPage() {
     setSelectedCategory("");
     setSelectedArea("");
     setSelectedLetter("");
+    setCurrentPage(1);
     setLoading(true);
     const previews = await getMealsByIngredient(ingredientSearch.trim());
     const details = await Promise.all(
@@ -148,6 +157,7 @@ export default function SearchPage() {
     setSelectedLetter("");
     setIngredientSearch("");
     setFilterMode("search");
+    setCurrentPage(1);
     if (query) {
       setLoading(true);
       searchMealByName(query).then((data) => {
@@ -170,6 +180,12 @@ export default function SearchPage() {
     if (filterMode === "ingredient") return `Meals with "${ingredientSearch}"`;
     return `"${query}"`;
   };
+
+  const totalPages = Math.ceil(results.length / ITEMS_PER_PAGE);
+  const paginatedResults = results.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="bg-[#0F0F0F] min-h-screen pt-28 pb-24">
@@ -229,7 +245,6 @@ export default function SearchPage() {
 
         {/* Filter Row */}
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          {/* All Results */}
           <button
             onClick={clearFilters}
             className={cn(
@@ -243,7 +258,6 @@ export default function SearchPage() {
             All Results
           </button>
 
-          {/* Category Quick Filters */}
           {categories.slice(0, 5).map((cat) => (
             <button
               key={cat.idCategory}
@@ -260,7 +274,6 @@ export default function SearchPage() {
             </button>
           ))}
 
-          {/* More Filters Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
@@ -313,7 +326,6 @@ export default function SearchPage() {
         {showFilters && (
           <div className={cn("mb-8 p-6 rounded-2xl", "bg-[#1A1A1A] border border-white/5", "space-y-6")}>
 
-            {/* Filter by Area — Searchable Dropdown */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by Area
@@ -369,7 +381,6 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {/* Filter by A-Z */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by First Letter
@@ -394,7 +405,6 @@ export default function SearchPage() {
               </div>
             </div>
 
-            {/* Filter by Ingredient */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by Ingredient
@@ -429,7 +439,6 @@ export default function SearchPage() {
               </form>
             </div>
 
-            {/* All Categories */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by Category
@@ -463,9 +472,9 @@ export default function SearchPage() {
               <MealCardSkeleton key={i} />
             ))}
           </div>
-        ) : results.length > 0 ? (
+        ) : paginatedResults.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {results.map((meal) => (
+            {paginatedResults.map((meal) => (
               <MealCard
                 key={meal.idMeal}
                 id={meal.idMeal}
@@ -490,6 +499,70 @@ export default function SearchPage() {
               className={cn("px-6 py-3 rounded-pill", "bg-[#FF6B2C] text-white", "text-sm font-semibold font-poppins", "hover:brightness-110 transition-all duration-200", "shadow-[0_0_20px_rgba(255,107,44,0.3)]")}
             >
               Clear Filters
+            </button>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-12">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "border transition-all duration-200",
+                currentPage === 1
+                  ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                  : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+              )}
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((page) => {
+                if (totalPages <= 5) return true;
+                if (page === 1 || page === totalPages) return true;
+                if (Math.abs(page - currentPage) <= 1) return true;
+                return false;
+              })
+              .map((page, idx, arr) => {
+                const prevPage = arr[idx - 1];
+                const showEllipsis = prevPage && page - prevPage > 1;
+                return (
+                  <div key={page} className="flex items-center gap-2">
+                    {showEllipsis && (
+                      <span className="text-[#9E9E9E] text-sm font-poppins px-1">···</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center",
+                        "text-sm font-semibold font-poppins transition-all duration-200",
+                        currentPage === page
+                          ? "bg-[#FF6B2C] text-white shadow-[0_0_16px_rgba(255,107,44,0.4)]"
+                          : "text-[#E0E0E0] hover:bg-white/5"
+                      )}
+                    >
+                      {page}
+                    </button>
+                  </div>
+                );
+              })}
+
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "border transition-all duration-200",
+                currentPage === totalPages
+                  ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                  : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+              )}
+            >
+              <ChevronRight size={16} />
             </button>
           </div>
         )}
