@@ -73,8 +73,17 @@ export default function AreasPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const ITEMS_PER_PAGE = 12;
+useEffect(() => {
+  const check = () => setIsMobile(window.innerWidth < 768);
+  check();
+  window.addEventListener("resize", check);
+  return () => window.removeEventListener("resize", check);
+}, []);
+
+const ITEMS_PER_PAGE_DESKTOP = 12;
+const ITEMS_PER_PAGE_MOBILE = 4;
 
   useEffect(() => {
     getAreas().then((data) => {
@@ -91,12 +100,12 @@ export default function AreasPage() {
     a.strArea.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-
-  const paginatedAreas = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const itemsPerPage = isMobile ? ITEMS_PER_PAGE_MOBILE : ITEMS_PER_PAGE_DESKTOP;
+const totalPages = Math.ceil(filtered.length / itemsPerPage);
+const paginatedAreas = filtered.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
 
   return (
     <div className="bg-[#0F0F0F] min-h-screen pt-28 pb-24">
@@ -149,7 +158,7 @@ export default function AreasPage() {
         {/* Loading */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
+            {Array.from({ length: itemsPerPage }).map((_, i) => (
               <div
                 key={i}
                 className="animate-pulse bg-[#1A1A1A] rounded-2xl h-44"

@@ -17,7 +17,9 @@ import MealCard from "@/components/cards/MealCard";
 import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE_DESKTOP = 8;
+const ITEMS_PER_PAGE_MOBILE = 1;
+
 
 export default function AZPage() {
   const searchParams = useSearchParams();
@@ -36,6 +38,7 @@ export default function AZPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [areaSearch, setAreaSearch] = useState("");
+  
 
   useEffect(() => {
     getCategories().then(setCategories);
@@ -71,12 +74,21 @@ export default function AZPage() {
       : true;
     return matchCategory && matchArea && matchIngredient;
   });
+  const [isMobile, setIsMobile] = useState(false);
 
-  const totalPages = Math.ceil(filteredMeals.length / ITEMS_PER_PAGE);
-  const paginatedMeals = filteredMeals.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+useEffect(() => {
+  const check = () => setIsMobile(window.innerWidth < 768);
+  check();
+  window.addEventListener("resize", check);
+  return () => window.removeEventListener("resize", check);
+}, []);
+
+  const itemsPerPage = isMobile ? ITEMS_PER_PAGE_MOBILE : ITEMS_PER_PAGE_DESKTOP;
+const totalPages = Math.ceil(filteredMeals.length / itemsPerPage);
+const paginatedMeals = filteredMeals.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
 
   const clearFilters = () => {
     setSelectedCategory("");

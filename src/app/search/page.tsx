@@ -21,7 +21,8 @@ import MealCard from "@/components/cards/MealCard";
 import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE_DESKTOP = 8;
+const ITEMS_PER_PAGE_MOBILE = 1;
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -41,6 +42,14 @@ export default function SearchPage() {
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [filterMode, setFilterMode] = useState<"search" | "letter" | "category" | "area" | "ingredient">("search");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     getCategories().then(setCategories);
@@ -181,10 +190,11 @@ export default function SearchPage() {
     return `"${query}"`;
   };
 
-  const totalPages = Math.ceil(results.length / ITEMS_PER_PAGE);
+  const itemsPerPage = isMobile ? ITEMS_PER_PAGE_MOBILE : ITEMS_PER_PAGE_DESKTOP;
+  const totalPages = Math.ceil(results.length / itemsPerPage);
   const paginatedResults = results.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   return (
@@ -468,7 +478,7 @@ export default function SearchPage() {
         {/* Results Grid */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: itemsPerPage }).map((_, i) => (
               <MealCardSkeleton key={i} />
             ))}
           </div>

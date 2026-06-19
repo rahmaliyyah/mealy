@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Play } from "lucide-react";
+import { ChevronRight, Play, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getMealById,
@@ -86,6 +86,7 @@ export default function MealDetailPage() {
   const [loading, setLoading] = useState(true);
   const [relatedMeals, setRelatedMeals] = useState<Meal[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(true);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getMealById(id).then((data) => {
@@ -127,6 +128,15 @@ export default function MealDetailPage() {
 
     fetchRelated();
   }, [meal]);
+
+  const scrollSlider = (dir: "left" | "right") => {
+    if (!sliderRef.current) return;
+    const amount = sliderRef.current.offsetWidth * 0.8;
+    sliderRef.current.scrollBy({
+      left: dir === "right" ? amount : -amount,
+      behavior: "smooth",
+    });
+  };
 
   if (loading) {
     return (
@@ -239,7 +249,7 @@ export default function MealDetailPage() {
           <aside className="lg:col-span-4">
             <div
               className={cn(
-                "sticky top-28",
+                "lg:sticky lg:top-28",
                 "bg-[#1A1A1A] rounded-2xl",
                 "border border-white/5",
                 "overflow-hidden"
@@ -340,22 +350,56 @@ export default function MealDetailPage() {
               More {meal.strCategory} recipes you might enjoy
             </p>
           </div>
+
+          {/* Slider Arrows */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => scrollSlider("left")}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "border border-white/10 text-[#E0E0E0]",
+                "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
+                "transition-all duration-200"
+              )}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={() => scrollSlider("right")}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "border border-white/10 text-[#E0E0E0]",
+                "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
+                "transition-all duration-200"
+              )}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        {/* Slider */}
+        <div
+          ref={sliderRef}
+          className="flex gap-6 overflow-x-auto pb-4 scroll-smooth"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           {loadingRelated
             ? Array.from({ length: 4 }).map((_, i) => (
-                <MealCardSkeleton key={i} />
+                <div key={i} className="flex-shrink-0 w-[280px]">
+                  <MealCardSkeleton />
+                </div>
               ))
             : relatedMeals.map((m) => (
-                <MealCard
-                  key={m.idMeal}
-                  id={m.idMeal}
-                  name={m.strMeal}
-                  thumbnail={m.strMealThumb}
-                  category={m.strCategory}
-                  area={m.strArea}
-                />
+                <div key={m.idMeal} className="flex-shrink-0 w-[280px]">
+                  <MealCard
+                    id={m.idMeal}
+                    name={m.strMeal}
+                    thumbnail={m.strMealThumb}
+                    category={m.strCategory}
+                    area={m.strArea}
+                  />
+                </div>
               ))}
         </div>
       </section>

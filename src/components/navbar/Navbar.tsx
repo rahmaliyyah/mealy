@@ -52,13 +52,11 @@ export default function Navbar() {
     }
   };
 
-  // Scroll to hero section smoothly
   const scrollToHero = () => {
     const hero = document.getElementById("hero");
     if (hero) {
       hero.scrollIntoView({ behavior: "smooth" });
     } else {
-      // Fallback: scroll to top if no #hero element found
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -68,7 +66,6 @@ export default function Navbar() {
       e.preventDefault();
       scrollToHero();
     }
-    // If not on homepage, let the Link navigate normally to "/"
     setMobileOpen(false);
   };
 
@@ -82,14 +79,14 @@ export default function Navbar() {
   return (
     <>
       <nav
-        style={{ padding: "12px 40px" }}
         className={cn(
           "fixed top-4 left-1/2 -translate-x-1/2 z-50",
-          "w-[80%] max-w-7xl",
+          "w-[92%] md:w-[80%] max-w-7xl",
           "rounded-full",
           "border border-white/10",
-          "grid grid-cols-[auto_1fr_auto]",
+          "grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto]",
           "items-center",
+          "px-4 py-2.5 md:px-10 md:py-3",
           "transition-all duration-300",
           scrolled
             ? "bg-[rgba(26,26,26,0.95)] backdrop-blur-xl shadow-navbar"
@@ -101,13 +98,13 @@ export default function Navbar() {
           <Image
             src="/assets/logo.svg"
             alt="Mealy Logo"
-            width={78}
-            height={78}
+            width={isMobile ? 44 : 78}
+            height={isMobile ? 44 : 78}
             priority
           />
         </Link>
 
-        {/* Center Navigation */}
+        {/* Center Navigation — desktop only */}
         <div
           style={{
             display: isMobile ? "none" : "flex",
@@ -225,86 +222,111 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Right Side */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {/* Mobile center — empty filler to keep grid layout */}
+        {isMobile && <div />}
 
-          {/* Search Bar */}
-          <form
-            onSubmit={handleSearch}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              backgroundColor: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "9999px",
-              overflow: "hidden",
-              width: searchOpen ? "240px" : "44px",
-              height: "44px",
-              transition: "width 0.3s ease",
-            }}
-          >
-            <button
-              type={searchOpen ? "submit" : "button"}
-              onClick={() => !searchOpen && setSearchOpen(true)}
+        {/* Right Side */}
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "6px" : "12px" }}>
+
+          {/* Search Bar — hidden on mobile, replaced by icon in overlay/hamburger row */}
+          {!isMobile && (
+            <form
+              onSubmit={handleSearch}
               style={{
-                width: "44px",
+                display: "flex",
+                alignItems: "center",
+                backgroundColor: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "9999px",
+                overflow: "hidden",
+                width: searchOpen ? "240px" : "44px",
                 height: "44px",
+                transition: "width 0.3s ease",
+              }}
+            >
+              <button
+                type={searchOpen ? "submit" : "button"}
+                onClick={() => !searchOpen && setSearchOpen(true)}
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <Search size={18} color="#9E9E9E" />
+              </button>
+
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search meals..."
+                style={{
+                  flex: 1,
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  color: "white",
+                  fontSize: "14px",
+                  fontFamily: "var(--font-poppins)",
+                  paddingRight: "12px",
+                  opacity: searchOpen ? 1 : 0,
+                  transition: "opacity 0.2s ease",
+                  width: searchOpen ? "auto" : "0px",
+                }}
+              />
+
+              {searchOpen && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#9E9E9E",
+                    flexShrink: 0,
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    marginRight: "4px",
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </form>
+          )}
+
+          {/* Mobile Search Icon — opens mobile overlay search */}
+          {isMobile && (
+            <button
+              onClick={() => setMobileOpen(true)}
+              style={{
+                width: "36px",
+                height: "36px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                flexShrink: 0,
+                color: "#E0E0E0",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
               }}
             >
-              <Search size={18} color="#9E9E9E" />
+              <Search size={18} />
             </button>
+          )}
 
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search meals..."
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "white",
-                fontSize: "14px",
-                fontFamily: "var(--font-poppins)",
-                paddingRight: "12px",
-                opacity: searchOpen ? 1 : 0,
-                transition: "opacity 0.2s ease",
-                width: searchOpen ? "auto" : "0px",
-              }}
-            />
-
-            {searchOpen && (
-              <button
-                type="button"
-                onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#9E9E9E",
-                  flexShrink: 0,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  marginRight: "4px",
-                }}
-              >
-                <X size={14} />
-              </button>
-            )}
-          </form>
-
-          {/* Surprise Me */}
+          {/* Surprise Me — desktop only */}
           {!isMobile && (
             <Link
               href="/surprise"
@@ -336,8 +358,8 @@ export default function Navbar() {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               style={{
-                width: "40px",
-                height: "40px",
+                width: "36px",
+                height: "36px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -345,6 +367,7 @@ export default function Navbar() {
                 background: "none",
                 border: "none",
                 cursor: "pointer",
+                flexShrink: 0,
               }}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -354,92 +377,146 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Overlay */}
-      {mobileOpen && (
+      {mobileOpen && isMobile && (
         <div
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 40,
-            backgroundColor: "rgba(15,15,15,0.95)",
+            backgroundColor: "rgba(15,15,15,0.97)",
             backdropFilter: "blur(20px)",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "32px",
+            overflowY: "auto",
+            padding: "100px 24px 40px",
           }}
         >
-          {navLinks.map((link) =>
-            link.dropdown ? (
-              <div key={link.label} style={{ textAlign: "center" }}>
-                <p
+          {/* Mobile Search */}
+          <form
+            onSubmit={(e) => {
+              handleSearch(e);
+              setMobileOpen(false);
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              backgroundColor: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "9999px",
+              padding: "4px 4px 4px 20px",
+              marginBottom: "40px",
+            }}
+          >
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search meals..."
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "white",
+                fontSize: "16px",
+                fontFamily: "var(--font-poppins)",
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "9999px",
+                backgroundColor: "#FF6B2C",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "none",
+                flexShrink: 0,
+              }}
+            >
+              <Search size={18} color="white" />
+            </button>
+          </form>
+
+          {/* Nav Links */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "32px", flex: 1 }}>
+            {navLinks.map((link) =>
+              link.dropdown ? (
+                <div key={link.label}>
+                  <p
+                    style={{
+                      color: "#9E9E9E",
+                      fontSize: "12px",
+                      fontFamily: "var(--font-poppins)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    {link.label}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {link.dropdown.map((item) => (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        onClick={() => setMobileOpen(false)}
+                        style={{
+                          fontSize: "22px",
+                          fontWeight: 700,
+                          color: "white",
+                          fontFamily: "var(--font-poppins)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={link.label === "Home" ? handleHomeClick : () => setMobileOpen(false)}
                   style={{
-                    color: "#9E9E9E",
-                    fontSize: "12px",
+                    fontSize: "26px",
+                    fontWeight: 700,
+                    color: "white",
                     fontFamily: "var(--font-poppins)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    marginBottom: "16px",
+                    textDecoration: "none",
                   }}
                 >
                   {link.label}
-                </p>
-                {link.dropdown.map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    style={{
-                      display: "block",
-                      fontSize: "24px",
-                      fontWeight: 700,
-                      color: "white",
-                      fontFamily: "var(--font-poppins)",
-                      textDecoration: "none",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={link.label === "Home" ? handleHomeClick : () => setMobileOpen(false)}
-                style={{
-                  fontSize: "30px",
-                  fontWeight: 700,
-                  color: "white",
-                  fontFamily: "var(--font-poppins)",
-                  textDecoration: "none",
-                }}
-              >
-                {link.label}
-              </Link>
-            )
-          )}
+                </Link>
+              )
+            )}
+          </div>
+
+          {/* Surprise Me */}
           <Link
             href="/surprise"
             onClick={() => setMobileOpen(false)}
             style={{
-              marginTop: "16px",
+              marginTop: "32px",
               padding: "16px 32px",
               borderRadius: "9999px",
               backgroundColor: "#FF6B2C",
               color: "white",
-              fontSize: "18px",
+              fontSize: "16px",
               fontWeight: 700,
               fontFamily: "var(--font-poppins)",
               boxShadow: "0 0 20px rgba(255,107,44,0.4)",
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "8px",
               textDecoration: "none",
             }}
           >
-            <Shuffle size={18} />
+           <span style={{ fontSize: "18px" }}>🎲</span>
             Surprise Me
           </Link>
         </div>

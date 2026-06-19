@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Shuffle, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Shuffle, Search, ChevronDown, ChevronUp, ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getRandomMeal,
@@ -33,6 +33,8 @@ const LETTER_COLORS = [
 ];
 
 const AREAS_LIMIT = 16;
+const AREAS_LIMIT_MOBILE = 8;
+const CATEGORIES_PER_PAGE_MOBILE = 6;
 
 export default function HomePage() {
   const [heroMeal, setHeroMeal] = useState<Meal | null>(null);
@@ -45,11 +47,27 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [areaSearch, setAreaSearch] = useState("");
   const [showAllAreas, setShowAllAreas] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [categoriesPage, setCategoriesPage] = useState(1);
 
   const areasSectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     getRandomMeal().then(setHeroMeal);
+  }, []);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => setShowBackToTop(window.scrollY > 600);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -99,9 +117,10 @@ export default function HomePage() {
     a.strArea.toLowerCase().includes(areaSearch.toLowerCase())
   );
 
+  const areasLimit = isMobile ? AREAS_LIMIT_MOBILE : AREAS_LIMIT;
   const displayedAreas = showAllAreas
     ? filteredAreas
-    : filteredAreas.slice(0, AREAS_LIMIT);
+    : filteredAreas.slice(0, areasLimit);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,11 +136,21 @@ export default function HomePage() {
     }, 50);
   };
 
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const totalCategoriesPages = Math.ceil(categories.length / CATEGORIES_PER_PAGE_MOBILE);
+  const displayedCategories = isMobile
+    ? categories.slice(
+        (categoriesPage - 1) * CATEGORIES_PER_PAGE_MOBILE,
+        categoriesPage * CATEGORIES_PER_PAGE_MOBILE
+      )
+    : categories;
+
   return (
     <div className="bg-[#0F0F0F] min-h-screen">
 
       {/* ===== HERO ===== */}
-      <section className="relative w-full h-screen flex items-center overflow-hidden">
+      <section id="hero" className="relative w-full min-h-[85vh] md:h-screen flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0 bg-[#1A1A1A]">
           {heroMeal && heroMeal.strMealThumb && (
             <Image
@@ -136,13 +165,13 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F0F] via-transparent to-[#0F0F0F]/30" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
-            <h1 className="font-bold text-white font-poppins text-4xl md:text-6xl leading-tight">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full grid md:grid-cols-2 gap-8 md:gap-12 items-center py-28 md:py-0">
+          <div className="space-y-5 md:space-y-8">
+            <h1 className="font-bold text-white font-poppins text-3xl sm:text-4xl md:text-6xl leading-tight">
               Discover Your Next{" "}
               <span className="text-[#FF6B2C]">Favorite Meal</span>
             </h1>
-            <p className="text-[#9E9E9E] text-lg font-poppins max-w-md">
+            <p className="text-[#9E9E9E] text-base md:text-lg font-poppins max-w-md">
               Explore thousands of recipes from around the world. Find your next culinary adventure.
             </p>
 
@@ -156,7 +185,7 @@ export default function HomePage() {
                   "w-full rounded-pill",
                   "bg-white/10 backdrop-blur-sm",
                   "border border-white/10",
-                  "px-6 py-4 pr-14",
+                  "px-5 py-3.5 md:px-6 md:py-4 pr-14",
                   "text-white placeholder:text-[#9E9E9E]",
                   "font-poppins text-sm",
                   "outline-none focus:border-[#FF6B2C]",
@@ -167,7 +196,7 @@ export default function HomePage() {
                 type="submit"
                 className={cn(
                   "absolute right-2 top-1/2 -translate-y-1/2",
-                  "w-10 h-10 rounded-full",
+                  "w-9 h-9 md:w-10 md:h-10 rounded-full",
                   "bg-[#FF6B2C] text-white",
                   "flex items-center justify-center",
                   "hover:brightness-110 transition-all duration-200"
@@ -234,7 +263,7 @@ export default function HomePage() {
           )}
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 animate-bounce">
+        <div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex-col items-center gap-2 animate-bounce">
           <p className="text-[#9E9E9E] text-xs font-poppins">Scroll to explore</p>
           <ChevronDown size={20} className="text-[#9E9E9E]" />
         </div>
@@ -242,9 +271,9 @@ export default function HomePage() {
 
       {/* ===== MEAL OF THE DAY ===== */}
       {motdMeal && (
-        <section className="max-w-7xl mx-auto px-6 py-24">
-          <div className="grid md:grid-cols-2 gap-0 bg-[#1A1A1A] rounded-[40px] overflow-hidden border border-white/5 shadow-card">
-            <div className="relative h-80 md:h-auto min-h-[400px] bg-[#242424]">
+        <section className="max-w-7xl mx-auto px-6 py-10 md:py-24">
+          <div className="grid md:grid-cols-2 gap-0 bg-[#1A1A1A] rounded-[28px] md:rounded-[40px] overflow-hidden border border-white/5 shadow-card">
+            <div className="relative h-56 md:h-auto md:min-h-[400px] bg-[#242424]">
               {motdMeal.strMealThumb ? (
                 <Image
                   src={`${motdMeal.strMealThumb}/large`}
@@ -258,11 +287,11 @@ export default function HomePage() {
                 </div>
               )}
             </div>
-            <div className="p-8 md:p-12 space-y-6 flex flex-col justify-center">
+            <div className="p-6 md:p-12 space-y-4 md:space-y-6 flex flex-col justify-center">
               <span className="text-[#FF6B2C] font-bold tracking-widest uppercase text-xs font-poppins">
                 Meal of the Day
               </span>
-              <h2 className="font-bold text-white font-poppins text-3xl md:text-4xl leading-tight">
+              <h2 className="font-bold text-white font-poppins text-2xl md:text-4xl leading-tight">
                 {motdMeal.strMeal}
               </h2>
               <div className="flex gap-2 flex-wrap">
@@ -277,14 +306,14 @@ export default function HomePage() {
                   </span>
                 )}
               </div>
-              <p className="text-[#9E9E9E] text-sm font-poppins leading-relaxed line-clamp-4">
-                {motdMeal.strInstructions}
-              </p>
+              <p className="hidden md:block text-[#9E9E9E] text-sm font-poppins leading-relaxed">
+  {motdMeal.strInstructions?.slice(0, 150)}...
+</p>
               <Link
                 href={`/meal/${motdMeal.idMeal}`}
                 className={cn(
                   "inline-flex items-center gap-2 w-fit",
-                  "px-8 py-3.5 rounded-pill",
+                  "px-6 py-3 md:px-8 md:py-3.5 rounded-pill",
                   "bg-[#FF6B2C] text-white",
                   "font-semibold text-sm font-poppins",
                   "hover:brightness-110 hover:scale-105 active:scale-95",
@@ -300,10 +329,10 @@ export default function HomePage() {
       )}
 
       {/* ===== WHAT ARE YOU CRAVING ===== */}
-      <section className="max-w-7xl mx-auto px-6 py-10">
+      <section className="max-w-7xl mx-auto px-6 py-6 md:py-10">
         <SectionHeader title="What Are You Craving?" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {categories.map((cat) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+          {displayedCategories.map((cat) => (
             <CategoryCard
               key={cat.idCategory}
               name={cat.strCategory}
@@ -312,17 +341,52 @@ export default function HomePage() {
             />
           ))}
         </div>
+
+        {/* Mobile Pagination */}
+        {isMobile && categories.length > CATEGORIES_PER_PAGE_MOBILE && (
+          <div className="flex items-center justify-center gap-3 mt-5">
+            <button
+              onClick={() => setCategoriesPage((p) => Math.max(p - 1, 1))}
+              disabled={categoriesPage === 1}
+              className={cn(
+                "w-9 h-9 rounded-full flex items-center justify-center",
+                "border transition-all duration-200",
+                categoriesPage === 1
+                  ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                  : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+              )}
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <span className="text-xs text-[#9E9E9E] font-poppins">
+              {categoriesPage} / {totalCategoriesPages}
+            </span>
+            <button
+              onClick={() => setCategoriesPage((p) => Math.min(p + 1, totalCategoriesPages))}
+              disabled={categoriesPage === totalCategoriesPages}
+              className={cn(
+                "w-9 h-9 rounded-full flex items-center justify-center",
+                "border transition-all duration-200",
+                categoriesPage === totalCategoriesPages
+                  ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                  : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+              )}
+            >
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        )}
       </section>
 
       {/* ===== FOOD AROUND THE WORLD ===== */}
-      <section ref={areasSectionRef} className="bg-[#0A0A0A] py-24">
+      <section ref={areasSectionRef} className="bg-[#0A0A0A] py-10 md:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-6 md:mb-10">
             <div>
-              <h2 className="font-bold text-white font-poppins text-3xl md:text-4xl">
+              <h2 className="font-bold text-white font-poppins text-2xl md:text-4xl">
                 Food Around The World
               </h2>
-              <p className="mt-2 text-[#9E9E9E] text-sm font-poppins">
+              <p className="hidden md:block mt-2 text-[#9E9E9E] text-sm font-poppins">
                 Explore cuisines from every corner of the globe
               </p>
             </div>
@@ -338,7 +402,7 @@ export default function HomePage() {
                 className={cn(
                   "w-full rounded-pill",
                   "bg-white/5 border border-white/10",
-                  "px-5 py-3 pr-10",
+                  "px-5 py-2.5 md:py-3 pr-10",
                   "text-white placeholder:text-[#9E9E9E]",
                   "font-poppins text-sm",
                   "outline-none focus:border-[#FF6B2C]",
@@ -349,21 +413,21 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
             {displayedAreas.map((area) => (
               <Link
                 key={area.strArea}
                 href={`/areas/${area.strArea}`}
                 className={cn(
-                  "group flex flex-col items-center justify-center gap-2 p-4",
-                  "rounded-2xl min-h-[80px]",
+                  "group flex flex-col items-center justify-center gap-2 p-3 md:p-4",
+                  "rounded-xl md:rounded-2xl min-h-[60px] md:min-h-[80px]",
                   "bg-[#1A1A1A] border border-white/5",
                   "hover:border-[#FF6B2C]/30 hover:bg-[#242424]",
                   "transition-all duration-300 cursor-pointer"
                 )}
               >
                 <p className={cn(
-                  "text-xs font-medium text-[#E0E0E0] font-poppins text-center",
+                  "text-[11px] md:text-xs font-medium text-[#E0E0E0] font-poppins text-center",
                   "group-hover:text-[#FF6B2C] transition-colors duration-200"
                 )}>
                   {area.strArea}
@@ -372,13 +436,13 @@ export default function HomePage() {
             ))}
           </div>
 
-          {filteredAreas.length > AREAS_LIMIT && (
-            <div className="flex justify-center mt-8">
+          {filteredAreas.length > areasLimit && (
+            <div className="flex justify-center mt-6 md:mt-8">
               <button
                 onClick={showAllAreas ? handleShowLess : () => setShowAllAreas(true)}
                 className={cn(
                   "flex items-center gap-2",
-                  "px-6 py-3 rounded-pill",
+                  "px-5 py-2.5 md:px-6 md:py-3 rounded-pill",
                   "bg-[#1A1A1A] border border-white/10",
                   "text-sm font-semibold text-[#E0E0E0] font-poppins",
                   "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
@@ -397,7 +461,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== YOU MIGHT LIKE THESE ===== */}
-      <section className="max-w-7xl mx-auto px-6 py-24">
+      <section className="max-w-7xl mx-auto px-6 py-10 md:py-24">
         <SectionHeader
           title="You Might Like These"
           subtitle="Random picks refreshed just for you"
@@ -406,7 +470,7 @@ export default function HomePage() {
             onClick={fetchRandomMeals}
             className={cn(
               "flex items-center gap-2",
-              "px-5 py-2.5 rounded-pill",
+              "px-4 py-2 md:px-5 md:py-2.5 rounded-pill",
               "bg-[#1A1A1A] border border-white/10",
               "text-sm font-semibold text-white font-poppins",
               "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
@@ -418,41 +482,63 @@ export default function HomePage() {
           </button>
         </SectionHeader>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {loadingRandom
-            ? Array.from({ length: 6 }).map((_, i) => <MealCardSkeleton key={i} />)
-            : randomMeals.map((meal) => (
-                <MealCard
-                  key={meal.idMeal}
-                  id={meal.idMeal}
-                  name={meal.strMeal}
-                  thumbnail={meal.strMealThumb}
-                  category={meal.strCategory}
-                  area={meal.strArea}
-                />
-              ))}
-        </div>
+        {isMobile ? (
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide snap-x snap-mandatory">
+            {loadingRandom
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[75%] snap-start">
+                    <MealCardSkeleton />
+                  </div>
+                ))
+              : randomMeals.map((meal) => (
+                  <div key={meal.idMeal} className="flex-shrink-0 w-[75%] snap-start">
+                    <MealCard
+                      id={meal.idMeal}
+                      name={meal.strMeal}
+                      thumbnail={meal.strMealThumb}
+                      category={meal.strCategory}
+                      area={meal.strArea}
+                    />
+                  </div>
+                ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {loadingRandom
+              ? Array.from({ length: 6 }).map((_, i) => <MealCardSkeleton key={i} />)
+              : randomMeals.map((meal) => (
+                  <MealCard
+                    key={meal.idMeal}
+                    id={meal.idMeal}
+                    name={meal.strMeal}
+                    thumbnail={meal.strMealThumb}
+                    category={meal.strCategory}
+                    area={meal.strArea}
+                  />
+                ))}
+          </div>
+        )}
       </section>
 
       {/* ===== SEARCH BY INGREDIENT ===== */}
-      <section className="bg-[#0A0A0A] py-24">
+      <section className="bg-[#0A0A0A] py-10 md:py-24">
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeader title="Search by Ingredient" centered />
-          <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
-            {ingredients.map((ing) => (
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3 max-w-4xl mx-auto">
+            {(isMobile ? ingredients.slice(0, 10) : ingredients).map((ing) => (
               <Link
                 key={ing.idIngredient}
                 href={`/ingredients/${encodeURIComponent(ing.strIngredient)}`}
                 className={cn(
                   "flex items-center gap-2",
-                  "px-5 py-2.5 rounded-pill",
+                  "px-4 py-2 md:px-5 md:py-2.5 rounded-pill",
                   "bg-[#1A1A1A] border border-white/5",
-                  "text-sm font-medium text-[#E0E0E0] font-poppins",
+                  "text-xs md:text-sm font-medium text-[#E0E0E0] font-poppins",
                   "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
                   "transition-all duration-200"
                 )}
               >
-                <div className="relative w-5 h-5 flex-shrink-0">
+                <div className="relative w-4 h-4 md:w-5 md:h-5 flex-shrink-0">
                   <Image
                     src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient.replace(/ /g, "_")}-small.png`}
                     alt={ing.strIngredient}
@@ -468,12 +554,12 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="flex justify-center mt-10">
+          <div className="flex justify-center mt-6 md:mt-10">
             <Link
               href="/ingredients"
               className={cn(
                 "flex items-center gap-2",
-                "px-8 py-3.5 rounded-pill",
+                "px-6 py-3 md:px-8 md:py-3.5 rounded-pill",
                 "bg-[#1A1A1A] border border-white/10",
                 "text-sm font-semibold text-[#E0E0E0] font-poppins",
                 "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
@@ -487,17 +573,17 @@ export default function HomePage() {
       </section>
 
       {/* ===== EXPLORE ALPHABETICALLY ===== */}
-      <section className="max-w-7xl mx-auto px-6 py-24">
+      <section className="max-w-7xl mx-auto px-6 py-10 md:py-24">
         <SectionHeader title="Explore Alphabetically" />
-        <div className="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-13 gap-3">
+        <div className="grid grid-cols-6 sm:grid-cols-9 md:grid-cols-13 gap-2 md:gap-3">
           {LETTERS.map((letter, i) => (
             <Link
               key={letter}
               href={`/az?letter=${letter}`}
               className={cn(
                 "aspect-square flex items-center justify-center",
-                "rounded-xl",
-                "text-xl font-bold font-poppins",
+                "rounded-lg md:rounded-xl",
+                "text-base md:text-xl font-bold font-poppins",
                 "border border-white/5",
                 LETTER_COLORS[i % LETTER_COLORS.length],
                 "hover:scale-110 hover:border-[#FF6B2C]/50",
@@ -511,23 +597,23 @@ export default function HomePage() {
       </section>
 
       {/* ===== CTA BANNER ===== */}
-      <section className="max-w-7xl mx-auto px-6 py-24">
+      <section className="max-w-7xl mx-auto px-6 py-10 md:py-24">
         <div
           className={cn(
             "relative overflow-hidden",
-            "bg-[#FF6B2C] rounded-[40px]",
-            "p-12 md:p-20",
-            "flex flex-col md:flex-row items-center justify-between gap-8"
+            "bg-[#FF6B2C] rounded-[28px] md:rounded-[40px]",
+            "p-8 md:p-12 lg:p-20",
+            "flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8"
           )}
         >
           <div className="absolute inset-0 opacity-10">
             <div className="w-full h-full bg-[radial-gradient(circle_at_30%_50%,_white,_transparent_70%)]" />
           </div>
-          <div className="relative z-10 space-y-4 text-center md:text-left">
-            <h2 className="font-bold text-white font-poppins text-4xl md:text-5xl">
+          <div className="relative z-10 space-y-3 md:space-y-4 text-center md:text-left">
+            <h2 className="font-bold text-white font-poppins text-2xl md:text-5xl">
               Feeling Adventurous?
             </h2>
-            <p className="text-white/80 font-poppins text-lg max-w-xl">
+            <p className="text-white/80 font-poppins text-sm md:text-lg max-w-xl">
               Not sure what to cook tonight? Let us pick a random recipe just for you!
             </p>
           </div>
@@ -535,9 +621,9 @@ export default function HomePage() {
             href="/surprise"
             className={cn(
               "relative z-10 flex-shrink-0",
-              "px-10 py-5 rounded-pill",
+              "px-8 py-4 md:px-10 md:py-5 rounded-pill",
               "bg-white text-[#FF6B2C]",
-              "font-bold text-xl font-poppins",
+              "font-bold text-base md:text-xl font-poppins",
               "hover:scale-105 active:scale-95",
               "transition-all duration-200 shadow-xl"
             )}
@@ -547,10 +633,36 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Back to Top — mobile only */}
+      <button
+        onClick={scrollToTop}
+        className={cn(
+          "md:hidden fixed bottom-6 right-6 z-50",
+          "w-12 h-12 rounded-full",
+          "bg-[#FF6B2C] text-white",
+          "flex items-center justify-center",
+          "shadow-[0_0_20px_rgba(255,107,44,0.5)]",
+          "transition-all duration-300",
+          showBackToTop
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 translate-y-4 pointer-events-none"
+        )}
+        aria-label="Back to top"
+      >
+        <ArrowUp size={20} />
+      </button>
+
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>

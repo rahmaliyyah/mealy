@@ -23,8 +23,17 @@ export default function AreaDetailPage() {
   const [ingredientSearch, setIngredientSearch] = useState("");
   const [ingredientQuery, setIngredientQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const ITEMS_PER_PAGE = 8;
+useEffect(() => {
+  const check = () => setIsMobile(window.innerWidth < 768);
+  check();
+  window.addEventListener("resize", check);
+  return () => window.removeEventListener("resize", check);
+}, []);
+
+const ITEMS_PER_PAGE_DESKTOP = 8;
+const ITEMS_PER_PAGE_MOBILE = 1;
 
   useEffect(() => {
     getMealsByArea(name).then(async (previews) => {
@@ -56,11 +65,12 @@ export default function AreaDetailPage() {
     return matchCategory && matchLetter && matchIngredient;
   });
 
-  const totalPages = Math.ceil(filteredMeals.length / ITEMS_PER_PAGE);
-  const paginatedMeals = filteredMeals.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+ const itemsPerPage = isMobile ? ITEMS_PER_PAGE_MOBILE : ITEMS_PER_PAGE_DESKTOP;
+const totalPages = Math.ceil(filteredMeals.length / itemsPerPage);
+const paginatedMeals = filteredMeals.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
 
   const clearFilters = () => {
     setSelectedCategory("");

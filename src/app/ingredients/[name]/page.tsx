@@ -11,7 +11,8 @@ import MealCard from "@/components/cards/MealCard";
 import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE_DESKTOP = 8;
+const ITEMS_PER_PAGE_MOBILE = 1;
 
 export default function IngredientDetailPage() {
   const params = useParams();
@@ -25,6 +26,14 @@ export default function IngredientDetailPage() {
   const [ingredientSearch, setIngredientSearch] = useState("");
   const [ingredientQuery, setIngredientQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     getMealsByIngredient(name).then(async (previews) => {
@@ -36,12 +45,10 @@ export default function IngredientDetailPage() {
     });
   }, [name]);
 
-  // All unique areas from fetched meals
   const availableAreas = Array.from(
     new Set(allMeals.map((m) => m.strArea).filter(Boolean))
   ).sort();
 
-  // Filter meals on frontend
   const filteredMeals = allMeals.filter((meal) => {
     const matchArea = selectedArea ? meal.strArea === selectedArea : true;
     const matchLetter = selectedLetter
@@ -56,10 +63,11 @@ export default function IngredientDetailPage() {
     return matchArea && matchLetter && matchIngredient;
   });
 
-  const totalPages = Math.ceil(filteredMeals.length / ITEMS_PER_PAGE);
+  const itemsPerPage = isMobile ? ITEMS_PER_PAGE_MOBILE : ITEMS_PER_PAGE_DESKTOP;
+  const totalPages = Math.ceil(filteredMeals.length / itemsPerPage);
   const paginatedMeals = filteredMeals.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   const clearFilters = () => {
@@ -162,7 +170,6 @@ export default function IngredientDetailPage() {
         {showFilters && (
           <div className={cn("mb-8 p-6 rounded-2xl", "bg-[#1A1A1A] border border-white/5", "space-y-6")}>
 
-            {/* Filter by Area */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by Area
@@ -190,7 +197,6 @@ export default function IngredientDetailPage() {
               </div>
             </div>
 
-            {/* Filter by First Letter */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by First Letter
@@ -214,7 +220,6 @@ export default function IngredientDetailPage() {
               </div>
             </div>
 
-            {/* Filter by Ingredient */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by Ingredient
@@ -265,7 +270,7 @@ export default function IngredientDetailPage() {
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {loading ? (
-            Array.from({ length: 8 }).map((_, i) => (
+            Array.from({ length: itemsPerPage }).map((_, i) => (
               <MealCardSkeleton key={i} />
             ))
           ) : paginatedMeals.length > 0 ? (

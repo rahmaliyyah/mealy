@@ -6,7 +6,8 @@ import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getIngredientsList, type Ingredient } from "@/lib/api";
 
-const ITEMS_PER_PAGE = 18;
+const ITEMS_PER_PAGE_DESKTOP = 18;
+const ITEMS_PER_PAGE_MOBILE = 6;
 
 function IngredientImage({ name }: { name: string }) {
   const [error, setError] = useState(false);
@@ -15,22 +16,22 @@ function IngredientImage({ name }: { name: string }) {
 
   return (
     <div className="w-20 h-20 flex-shrink-0 bg-[#242424] rounded-lg overflow-hidden flex items-center justify-center">
-{error ? (
-  <svg
-    width="32"
-    height="32"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="#444444"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <circle cx="8.5" cy="8.5" r="1.5" />
-    <path d="M21 15l-5-5L5 21" />
-  </svg>
-) : (
+      {error ? (
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#444444"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <path d="M21 15l-5-5L5 21" />
+        </svg>
+      ) : (
         <img
           src={url}
           alt={name}
@@ -47,6 +48,14 @@ export default function IngredientsPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     getIngredientsList().then((data) => {
@@ -59,10 +68,11 @@ export default function IngredientsPage() {
     i.strIngredient.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const itemsPerPage = isMobile ? ITEMS_PER_PAGE_MOBILE : ITEMS_PER_PAGE_DESKTOP;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   return (
@@ -119,7 +129,7 @@ export default function IngredientsPage() {
         {/* Grid */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {Array.from({ length: 18 }).map((_, i) => (
+            {Array.from({ length: itemsPerPage }).map((_, i) => (
               <div
                 key={i}
                 className="animate-pulse bg-[#1A1A1A] rounded-2xl h-44"
