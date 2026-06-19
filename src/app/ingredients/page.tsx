@@ -1,13 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getIngredientsList, type Ingredient } from "@/lib/api";
 
 const ITEMS_PER_PAGE = 18;
+
+function IngredientImage({ name }: { name: string }) {
+  const [error, setError] = useState(false);
+
+  const url = `https://www.themealdb.com/images/ingredients/${name.replace(/ /g, "_")}-medium.png`;
+
+  return (
+    <div className="w-20 h-20 flex-shrink-0 bg-[#242424] rounded-lg overflow-hidden flex items-center justify-center">
+{error ? (
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#444444"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <path d="M21 15l-5-5L5 21" />
+  </svg>
+) : (
+        <img
+          src={url}
+          alt={name}
+          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+          onError={() => setError(true)}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function IngredientsPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -108,15 +141,7 @@ export default function IngredientsPage() {
                     "transition-all duration-300 cursor-pointer"
                   )}
                 >
-                  {/* Image */}
-                  <div className="relative w-20 h-20 flex-shrink-0">
-                    <Image
-                      src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient.replace(/ /g, "_")}-medium.png`}
-                      alt={ing.strIngredient}
-                      fill
-                      className="object-contain group-hover:scale-110 transition-transform duration-300"
-                    />
-                  </div>
+                  <IngredientImage name={ing.strIngredient} />
 
                   {/* Name */}
                   <div className="text-center space-y-1">
@@ -214,6 +239,7 @@ export default function IngredientsPage() {
             </p>
           </div>
         )}
+
       </div>
     </div>
   );
