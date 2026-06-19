@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Shuffle, Search, ChevronDown, ChevronUp, ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { Shuffle, Search, ArrowUp, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getRandomMeal,
@@ -32,8 +32,8 @@ const LETTER_COLORS = [
   "bg-[#00E65C]/20 text-[#00E65C]",
 ];
 
-const AREAS_LIMIT = 16;
-const AREAS_LIMIT_MOBILE = 8;
+const AREAS_PREVIEW = 16;
+const AREAS_PREVIEW_MOBILE = 8;
 const CATEGORIES_PER_PAGE_MOBILE = 6;
 
 export default function HomePage() {
@@ -45,13 +45,14 @@ export default function HomePage() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [areaSearch, setAreaSearch] = useState("");
-  const [showAllAreas, setShowAllAreas] = useState(false);
+  const [searchResults, setSearchResults] = useState<{ idMeal: string; strMeal: string; strMealThumb: string }[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [categoriesPage, setCategoriesPage] = useState(1);
 
-  const areasSectionRef = useRef<HTMLElement>(null);
+  const heroDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heroSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getRandomMeal().then(setHeroMeal);
@@ -87,6 +88,38 @@ export default function HomePage() {
     }
   }, []);
 
+  // Hero live search debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    if (heroDebounceRef.current) clearTimeout(heroDebounceRef.current);
+    heroDebounceRef.current = setTimeout(async () => {
+      const res = await fetch(
+        `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(searchQuery)}`
+      );
+      const data = await res.json();
+      setSearchResults(data.meals?.slice(0, 3) || []);
+      setSearchLoading(false);
+    }, 400);
+    return () => {
+      if (heroDebounceRef.current) clearTimeout(heroDebounceRef.current);
+    };
+  }, [searchQuery]);
+
+  // Close hero dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (heroSearchRef.current && !heroSearchRef.current.contains(e.target as Node)) {
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const fetchRandomMeals = async () => {
     setLoadingRandom(true);
     const promises = Array.from({ length: 6 }, () => getRandomMeal());
@@ -113,15 +146,6 @@ export default function HomePage() {
     getIngredientsList().then((list) => setIngredients(list.slice(0, 20)));
   }, []);
 
-  const filteredAreas = areas.filter((a) =>
-    a.strArea.toLowerCase().includes(areaSearch.toLowerCase())
-  );
-
-  const areasLimit = isMobile ? AREAS_LIMIT_MOBILE : AREAS_LIMIT;
-  const displayedAreas = showAllAreas
-    ? filteredAreas
-    : filteredAreas.slice(0, areasLimit);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -129,11 +153,9 @@ export default function HomePage() {
     }
   };
 
-  const handleShowLess = () => {
-    setShowAllAreas(false);
-    setTimeout(() => {
-      areasSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
+  const clearHeroSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -175,36 +197,108 @@ export default function HomePage() {
               Explore thousands of recipes from around the world. Find your next culinary adventure.
             </p>
 
-            <form onSubmit={handleSearch} className="relative max-w-md">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search any meal..."
-                className={cn(
-                  "w-full rounded-pill",
+            {/* Hero Search with Live Dropdown */}
+            <div ref={heroSearchRef} className="relative max-w-md">
+              <form onSubmit={handleSearch}>
+                <div className={cn(
+                  "flex items-center",
+                  "rounded-pill",
                   "bg-white/10 backdrop-blur-sm",
                   "border border-white/10",
-                  "px-5 py-3.5 md:px-6 md:py-4 pr-14",
-                  "text-white placeholder:text-[#9E9E9E]",
-                  "font-poppins text-sm",
-                  "outline-none focus:border-[#FF6B2C]",
-                  "transition-colors duration-200"
-                )}
-              />
-              <button
-                type="submit"
-                className={cn(
-                  "absolute right-2 top-1/2 -translate-y-1/2",
-                  "w-9 h-9 md:w-10 md:h-10 rounded-full",
-                  "bg-[#FF6B2C] text-white",
-                  "flex items-center justify-center",
-                  "hover:brightness-110 transition-all duration-200"
-                )}
-              >
-                <Search size={16} />
-              </button>
-            </form>
+                  "focus-within:border-[#FF6B2C]",
+                  "transition-colors duration-200",
+                  "pr-2"
+                )}>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search any meal..."
+                    className={cn(
+                      "flex-1 bg-transparent",
+                      "px-5 py-3.5 md:px-6 md:py-4",
+                      "text-white placeholder:text-[#9E9E9E]",
+                      "font-poppins text-sm",
+                      "outline-none"
+                    )}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={clearHeroSearch}
+                      className="w-8 h-8 flex items-center justify-center text-[#9E9E9E] hover:text-white transition-colors flex-shrink-0"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className={cn(
+                      "w-9 h-9 md:w-10 md:h-10 rounded-full flex-shrink-0",
+                      "bg-[#FF6B2C] text-white",
+                      "flex items-center justify-center",
+                      "hover:brightness-110 transition-all duration-200"
+                    )}
+                  >
+                    <Search size={16} />
+                  </button>
+                </div>
+              </form>
+
+              {/* Hero Live Search Dropdown */}
+              {searchQuery.trim() && (
+                <div className={cn(
+                  "absolute top-full left-0 right-0 mt-2 z-20",
+                  "bg-[rgba(26,26,26,0.98)] backdrop-blur-xl",
+                  "border border-white/10 rounded-2xl",
+                  "overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+                )}>
+                  {searchLoading ? (
+                    <p className="px-4 py-4 text-[#9E9E9E] text-sm font-poppins">
+                      Searching...
+                    </p>
+                  ) : searchResults.length > 0 ? (
+                    <>
+                      {searchResults.map((meal) => (
+                        <Link
+                          key={meal.idMeal}
+                          href={`/meal/${meal.idMeal}`}
+                          onClick={clearHeroSearch}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-2.5",
+                            "hover:bg-white/5 transition-colors duration-150"
+                          )}
+                        >
+                          <img
+                            src={`${meal.strMealThumb}/small`}
+                            alt={meal.strMeal}
+                            className="w-9 h-9 rounded-lg object-cover flex-shrink-0"
+                          />
+                          <span className="text-[#E0E0E0] text-sm font-poppins font-medium truncate">
+                            {meal.strMeal}
+                          </span>
+                        </Link>
+                      ))}
+                      <div className="border-t border-white/5 px-4 py-2.5">
+                        <button
+                          onClick={() => {
+                            window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+                            clearHeroSearch();
+                          }}
+                          className="text-[#FF6B2C] text-[13px] font-poppins font-semibold hover:underline"
+                        >
+                          See all results for "{searchQuery}"
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="px-4 py-4 text-[#9E9E9E] text-sm font-poppins">
+                      No results found
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {heroMeal && (
@@ -303,8 +397,8 @@ export default function HomePage() {
                 )}
               </div>
               <p className="hidden md:block text-[#9E9E9E] text-sm font-poppins leading-relaxed">
-  {motdMeal.strInstructions?.slice(0, 150)}...
-</p>
+                {motdMeal.strInstructions?.slice(0, 150)}...
+              </p>
               <Link
                 href={`/meal/${motdMeal.idMeal}`}
                 className={cn(
@@ -375,42 +469,19 @@ export default function HomePage() {
       </section>
 
       {/* ===== FOOD AROUND THE WORLD ===== */}
-      <section ref={areasSectionRef} className="bg-[#0A0A0A] py-10 md:py-24">
+      <section className="bg-[#0A0A0A] py-10 md:py-24">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-6 md:mb-10">
-            <div>
-              <h2 className="font-bold text-white font-poppins text-2xl md:text-4xl">
-                Food Around The World
-              </h2>
-              <p className="hidden md:block mt-2 text-[#9E9E9E] text-sm font-poppins">
-                Explore cuisines from every corner of the globe
-              </p>
-            </div>
-            <div className="relative w-full md:w-64">
-              <input
-                type="text"
-                value={areaSearch}
-                onChange={(e) => {
-                  setAreaSearch(e.target.value);
-                  setShowAllAreas(true);
-                }}
-                placeholder="Search country..."
-                className={cn(
-                  "w-full rounded-pill",
-                  "bg-white/5 border border-white/10",
-                  "px-5 py-2.5 md:py-3 pr-10",
-                  "text-white placeholder:text-[#9E9E9E]",
-                  "font-poppins text-sm",
-                  "outline-none focus:border-[#FF6B2C]",
-                  "transition-colors duration-200"
-                )}
-              />
-              <Search size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9E9E9E]" />
-            </div>
+          <div className="mb-6 md:mb-10">
+            <h2 className="font-bold text-white font-poppins text-2xl md:text-4xl">
+              Food Around The World
+            </h2>
+            <p className="mt-2 text-[#9E9E9E] text-sm font-poppins">
+              Explore cuisines from every corner of the globe
+            </p>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
-            {displayedAreas.map((area) => (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
+            {areas.slice(0, isMobile ? AREAS_PREVIEW_MOBILE : AREAS_PREVIEW).map((area) => (
               <Link
                 key={area.strArea}
                 href={`/areas/${area.strArea}`}
@@ -432,27 +503,21 @@ export default function HomePage() {
             ))}
           </div>
 
-          {filteredAreas.length > areasLimit && (
-            <div className="flex justify-center mt-6 md:mt-8">
-              <button
-                onClick={showAllAreas ? handleShowLess : () => setShowAllAreas(true)}
-                className={cn(
-                  "flex items-center gap-2",
-                  "px-5 py-2.5 md:px-6 md:py-3 rounded-pill",
-                  "bg-[#1A1A1A] border border-white/10",
-                  "text-sm font-semibold text-[#E0E0E0] font-poppins",
-                  "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
-                  "transition-all duration-200"
-                )}
-              >
-                {showAllAreas ? (
-                  <>Show Less <ChevronUp size={14} /></>
-                ) : (
-                  <>Show All {filteredAreas.length} Countries <ChevronDown size={14} /></>
-                )}
-              </button>
-            </div>
-          )}
+          <div className="flex justify-center mt-6 md:mt-10">
+            <Link
+              href="/areas"
+              className={cn(
+                "flex items-center gap-2",
+                "px-6 py-3 md:px-8 md:py-3.5 rounded-pill",
+                "bg-[#1A1A1A] border border-white/10",
+                "text-sm font-semibold text-[#E0E0E0] font-poppins",
+                "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
+                "transition-all duration-200"
+              )}
+            >
+              Browse All Areas →
+            </Link>
+          </div>
         </div>
       </section>
 

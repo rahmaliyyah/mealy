@@ -119,14 +119,14 @@ const paginatedMeals = filteredMeals.slice(
 
         {/* Letter Nav */}
         <div className={cn("mb-8", "py-4", "border-b border-white/5")}>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {LETTERS.map((letter) => (
               <button
                 key={letter}
                 onClick={() => setActiveLetter(letter)}
                 className={cn(
-                  "w-10 h-10 rounded-xl",
-                  "font-bold text-sm font-poppins",
+                  "w-8 h-8 md:w-10 md:h-10 rounded-xl",
+                  "font-bold text-xs md:text-sm font-poppins",
                   "border transition-all duration-200 hover:scale-110",
                   activeLetter === letter
                     ? "bg-[#FF6B2C] border-[#FF6B2C] text-white shadow-[0_0_20px_rgba(255,107,44,0.4)]"

@@ -31,9 +31,13 @@ export default function Navbar() {
   const [browseOpen, setBrowseOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const pathname = usePathname();
   const isHomepage = pathname === "/";
+
+  // Width of the expanded search input — keep dropdown in sync with this
+  const SEARCH_EXPANDED_WIDTH = 240;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -46,6 +50,19 @@ export default function Navbar() {
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+        setSearchQuery("");
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -256,7 +273,7 @@ export default function Navbar() {
 
           {/* Search Bar — desktop only with live results */}
           {!isMobile && (
-            <div style={{ position: "relative" }}>
+            <div ref={searchContainerRef} style={{ position: "relative" }}>
               <form
                 onSubmit={handleSearch}
                 style={{
@@ -266,7 +283,7 @@ export default function Navbar() {
                   border: "1px solid rgba(255,255,255,0.1)",
                   borderRadius: "9999px",
                   overflow: "hidden",
-                  width: searchOpen ? "240px" : "44px",
+                  width: searchOpen ? `${SEARCH_EXPANDED_WIDTH}px` : "44px",
                   height: "44px",
                   transition: "width 0.3s ease",
                 }}
@@ -332,14 +349,14 @@ export default function Navbar() {
                 )}
               </form>
 
-              {/* Live Search Dropdown */}
+              {/* Live Search Dropdown — same width as expanded input */}
               {searchOpen && searchQuery.trim() && (
                 <div
                   style={{
                     position: "absolute",
                     top: "calc(100% + 8px)",
                     right: 0,
-                    width: "280px",
+                    width: `${SEARCH_EXPANDED_WIDTH}px`,
                     backgroundColor: "rgba(26,26,26,0.98)",
                     backdropFilter: "blur(20px)",
                     border: "1px solid rgba(255,255,255,0.1)",
@@ -428,6 +445,11 @@ export default function Navbar() {
                             border: "none",
                             cursor: "pointer",
                             padding: 0,
+                            width: "100%",
+                            textAlign: "left",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
                           }}
                         >
                           See all results for "{searchQuery}"

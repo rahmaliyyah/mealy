@@ -94,7 +94,7 @@ export default function SurprisePage() {
               )}
             >
               {/* Image */}
-              <div className="relative h-80 lg:h-auto min-h-[400px] bg-[#242424]">
+              <div className="relative h-52 lg:h-auto lg:min-h-[400px] bg-[#242424]">
                 {meal.strMealThumb ? (
                   <Image
                     src={`${meal.strMealThumb}/large`}
@@ -112,7 +112,7 @@ export default function SurprisePage() {
               </div>
 
               {/* Content */}
-              <div className="p-8 md:p-12 flex flex-col justify-center space-y-6">
+              <div className="p-5 md:p-12 flex flex-col justify-center space-y-4 md:space-y-6">
                 <div className="flex gap-2 flex-wrap">
                   {meal.strCategory && (
                     <span
@@ -145,7 +145,7 @@ export default function SurprisePage() {
                   {meal.strMeal}
                 </h2>
 
-                <p className="text-[#9E9E9E] font-poppins text-sm leading-relaxed line-clamp-4">
+                <p className="text-[#9E9E9E] font-poppins text-sm leading-relaxed line-clamp-2 md:line-clamp-4">
                   {meal.strInstructions}
                 </p>
 
