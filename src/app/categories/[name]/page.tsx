@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Search, SlidersHorizontal, X, ArrowUp } from "lucide-react";
+import { ChevronRight, ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMealsByCategory, getMealById, type Meal } from "@/lib/api";
 import MealCard from "@/components/cards/MealCard";
 import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const ITEMS_PER_PAGE = 8;
 
 export default function CategoryDetailPage() {
   const params = useParams();
@@ -22,7 +23,7 @@ export default function CategoryDetailPage() {
   const [selectedLetter, setSelectedLetter] = useState("");
   const [ingredientSearch, setIngredientSearch] = useState("");
   const [ingredientQuery, setIngredientQuery] = useState("");
-  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     getMealsByCategory(name).then(async (previews) => {
@@ -33,14 +34,6 @@ export default function CategoryDetailPage() {
       setLoading(false);
     });
   }, [name]);
-
-  useEffect(() => {
-    const handleScroll = () => setShowBackToTop(window.scrollY > 400);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   // All unique areas from fetched meals
   const availableAreas = Array.from(
@@ -62,11 +55,18 @@ export default function CategoryDetailPage() {
     return matchArea && matchLetter && matchIngredient;
   });
 
+  const totalPages = Math.ceil(filteredMeals.length / ITEMS_PER_PAGE);
+  const paginatedMeals = filteredMeals.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const clearFilters = () => {
     setSelectedArea("");
     setSelectedLetter("");
     setIngredientSearch("");
     setIngredientQuery("");
+    setCurrentPage(1);
   };
 
   const hasActiveFilters = selectedArea || selectedLetter || ingredientQuery;
@@ -126,19 +126,19 @@ export default function CategoryDetailPage() {
             {selectedArea && (
               <span className={cn("flex items-center gap-2 px-4 py-2 rounded-pill", "bg-[#00FFD1]/10 border border-[#00FFD1]/30 text-[#00FFD1] text-sm font-poppins")}>
                 Area: {selectedArea}
-                <button onClick={() => setSelectedArea("")}><X size={12} /></button>
+                <button onClick={() => { setSelectedArea(""); setCurrentPage(1); }}><X size={12} /></button>
               </span>
             )}
             {selectedLetter && (
               <span className={cn("flex items-center gap-2 px-4 py-2 rounded-pill", "bg-[#FFB800]/10 border border-[#FFB800]/30 text-[#FFB800] text-sm font-poppins")}>
                 Letter: {selectedLetter}
-                <button onClick={() => setSelectedLetter("")}><X size={12} /></button>
+                <button onClick={() => { setSelectedLetter(""); setCurrentPage(1); }}><X size={12} /></button>
               </span>
             )}
             {ingredientQuery && (
               <span className={cn("flex items-center gap-2 px-4 py-2 rounded-pill", "bg-[#00E65C]/10 border border-[#00E65C]/30 text-[#00E65C] text-sm font-poppins")}>
                 Ingredient: {ingredientQuery}
-                <button onClick={() => { setIngredientSearch(""); setIngredientQuery(""); }}><X size={12} /></button>
+                <button onClick={() => { setIngredientSearch(""); setIngredientQuery(""); setCurrentPage(1); }}><X size={12} /></button>
               </span>
             )}
             <button onClick={clearFilters} className="text-[#9E9E9E] text-sm font-poppins hover:text-white transition-colors">
@@ -160,7 +160,7 @@ export default function CategoryDetailPage() {
                 {availableAreas.map((area) => (
                   <button
                     key={area}
-                    onClick={() => setSelectedArea(selectedArea === area ? "" : area)}
+                    onClick={() => { setSelectedArea(selectedArea === area ? "" : area); setCurrentPage(1); }}
                     className={cn(
                       "px-4 py-2 rounded-pill text-xs font-medium font-poppins",
                       "border transition-all duration-200",
@@ -184,7 +184,7 @@ export default function CategoryDetailPage() {
                 {LETTERS.map((letter) => (
                   <button
                     key={letter}
-                    onClick={() => setSelectedLetter(selectedLetter === letter ? "" : letter)}
+                    onClick={() => { setSelectedLetter(selectedLetter === letter ? "" : letter); setCurrentPage(1); }}
                     className={cn(
                       "w-9 h-9 rounded-xl text-sm font-bold font-poppins",
                       "border transition-all duration-200 hover:scale-110",
@@ -208,6 +208,7 @@ export default function CategoryDetailPage() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   setIngredientQuery(ingredientSearch.trim());
+                  setCurrentPage(1);
                 }}
                 className="flex gap-3 max-w-sm"
               >
@@ -252,8 +253,8 @@ export default function CategoryDetailPage() {
             Array.from({ length: 8 }).map((_, i) => (
               <MealCardSkeleton key={i} />
             ))
-          ) : filteredMeals.length > 0 ? (
-            filteredMeals.map((meal) => (
+          ) : paginatedMeals.length > 0 ? (
+            paginatedMeals.map((meal) => (
               <MealCard
                 key={meal.idMeal}
                 id={meal.idMeal}
@@ -277,26 +278,71 @@ export default function CategoryDetailPage() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Back to Top Button */}
-      <button
-        onClick={scrollToTop}
-        className={cn(
-          "fixed bottom-8 right-8 z-50",
-          "w-12 h-12 rounded-full",
-          "bg-[#FF6B2C] text-white",
-          "flex items-center justify-center",
-          "shadow-[0_0_20px_rgba(255,107,44,0.5)]",
-          "transition-all duration-300",
-          showBackToTop
-            ? "opacity-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 translate-y-4 pointer-events-none"
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-12">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "border transition-all duration-200",
+                currentPage === 1
+                  ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                  : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+              )}
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((page) => {
+                if (totalPages <= 5) return true;
+                if (page === 1 || page === totalPages) return true;
+                if (Math.abs(page - currentPage) <= 1) return true;
+                return false;
+              })
+              .map((page, idx, arr) => {
+                const prevPage = arr[idx - 1];
+                const showEllipsis = prevPage && page - prevPage > 1;
+                return (
+                  <div key={page} className="flex items-center gap-2">
+                    {showEllipsis && (
+                      <span className="text-[#9E9E9E] text-sm font-poppins px-1">···</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center",
+                        "text-sm font-semibold font-poppins transition-all duration-200",
+                        currentPage === page
+                          ? "bg-[#FF6B2C] text-white shadow-[0_0_16px_rgba(255,107,44,0.4)]"
+                          : "text-[#E0E0E0] hover:bg-white/5"
+                      )}
+                    >
+                      {page}
+                    </button>
+                  </div>
+                );
+              })}
+
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "border transition-all duration-200",
+                currentPage === totalPages
+                  ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                  : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+              )}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         )}
-        aria-label="Back to top"
-      >
-        <ArrowUp size={20} />
-      </button>
+      </div>
     </div>
   );
 }
