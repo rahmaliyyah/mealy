@@ -48,7 +48,7 @@ export default function SurprisePage() {
           </h1>
 
           <p className="text-[#9E9E9E] font-poppins text-base max-w-xl mx-auto">
-            Not sure what to cook? Let us decide for you. Hit role for a new
+            Not sure what to cook? Let us decide for you. Hit roll for a new
             one!
           </p>
 
@@ -71,7 +71,7 @@ export default function SurprisePage() {
             <span className={cn("inline-block text-xl", spinning && "animate-spin")}>
               🎲
             </span>
-            Role Again
+            Roll Again
           </button>
         </div>
 
