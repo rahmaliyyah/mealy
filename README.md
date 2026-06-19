@@ -1,7 +1,5 @@
 <div align="center">
   <img src="public/assets/logo.svg" alt="Mealy Logo" width="120" />
-
-  <h1>Mealy</h1>
   <p>A food recipe discovery app powered by TheMealDB API</p>
   <p>Frontend Internship Task at <strong>CMLABS</strong></p>
 
