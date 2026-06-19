@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { ChevronRight,ChevronLeft, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAreas, type Area } from "@/lib/api";
 
@@ -186,50 +186,70 @@ export default function AreasPage() {
 
 {/* Pagination */}
 {totalPages > 1 && (
-  <div className="flex items-center justify-center gap-4 mt-12">
+  <div className="flex items-center justify-center gap-2 mt-12">
+    {/* Prev */}
     <button
-      onClick={() =>
-        setCurrentPage((prev) => Math.max(prev - 1, 1))
-      }
+      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
       disabled={currentPage === 1}
       className={cn(
-        "px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200",
+        "w-10 h-10 rounded-full flex items-center justify-center",
+        "border transition-all duration-200",
         currentPage === 1
-          ? "bg-[#1A1A1A] text-[#666] cursor-not-allowed"
-          : "bg-[#1A1A1A] text-white hover:bg-[#FF6B2C]"
+          ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+          : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
       )}
     >
-      ← Prev
+      <ChevronLeft size={16} />
     </button>
 
-    <div className="px-5 py-2.5 rounded-full bg-[#1A1A1A] border border-white/5">
-      <span className="text-sm text-[#9E9E9E] font-poppins">
-        Page{" "}
-        <span className="text-white font-semibold">
-          {currentPage}
-        </span>{" "}
-        of{" "}
-        <span className="text-white font-semibold">
-          {totalPages}
-        </span>
-      </span>
-    </div>
+    {/* Page Numbers */}
+    {Array.from({ length: totalPages }, (_, i) => i + 1)
+      .filter((page) => {
+        if (totalPages <= 5) return true;
+        if (page === 1 || page === totalPages) return true;
+        if (Math.abs(page - currentPage) <= 1) return true;
+        return false;
+      })
+      .map((page, idx, arr) => {
+        const prevPage = arr[idx - 1];
+        const showEllipsis = prevPage && page - prevPage > 1;
 
+        return (
+          <div key={page} className="flex items-center gap-2">
+            {showEllipsis && (
+              <span className="text-[#9E9E9E] text-sm font-poppins px-1">
+                ···
+              </span>
+            )}
+            <button
+              onClick={() => setCurrentPage(page)}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "text-sm font-semibold font-poppins transition-all duration-200",
+                currentPage === page
+                  ? "bg-[#FF6B2C] text-white shadow-[0_0_16px_rgba(255,107,44,0.4)]"
+                  : "text-[#E0E0E0] hover:bg-white/5"
+              )}
+            >
+              {page}
+            </button>
+          </div>
+        );
+      })}
+
+    {/* Next */}
     <button
-      onClick={() =>
-        setCurrentPage((prev) =>
-          Math.min(prev + 1, totalPages)
-        )
-      }
+      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
       disabled={currentPage === totalPages}
       className={cn(
-        "px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200",
+        "w-10 h-10 rounded-full flex items-center justify-center",
+        "border transition-all duration-200",
         currentPage === totalPages
-          ? "bg-[#1A1A1A] text-[#666] cursor-not-allowed"
-          : "bg-[#1A1A1A] text-white hover:bg-[#FF6B2C]"
+          ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+          : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
       )}
     >
-      Next →
+      <ChevronRight size={16} />
     </button>
   </div>
 )}

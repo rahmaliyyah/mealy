@@ -3,23 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronRight, ChevronLeft, Search, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getMealsByArea, getMealById, type Meal } from "@/lib/api";
 import MealCard from "@/components/cards/MealCard";
 import MealCardSkeleton from "@/components/cards/MealCardSkeleton";
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-
-const COUNTRY_FLAGS: Record<string, string> = {
-  American: "🇺🇸", British: "🇬🇧", Canadian: "🇨🇦", Chinese: "🇨🇳",
-  Croatian: "🇭🇷", Dutch: "🇳🇱", Egyptian: "🇪🇬", Filipino: "🇵🇭",
-  French: "🇫🇷", Greek: "🇬🇷", Indian: "🇮🇳", Irish: "🇮🇪",
-  Italian: "🇮🇹", Jamaican: "🇯🇲", Japanese: "🇯🇵", Kenyan: "🇰🇪",
-  Malaysian: "🇲🇾", Mexican: "🇲🇽", Moroccan: "🇲🇦", Polish: "🇵🇱",
-  Portuguese: "🇵🇹", Russian: "🇷🇺", Spanish: "🇪🇸", Thai: "🇹🇭",
-  Tunisian: "🇹🇳", Turkish: "🇹🇷", Ukrainian: "🇺🇦", Vietnamese: "🇻🇳",
-};
 
 export default function AreaDetailPage() {
   const params = useParams();
@@ -32,6 +22,9 @@ export default function AreaDetailPage() {
   const [selectedLetter, setSelectedLetter] = useState("");
   const [ingredientSearch, setIngredientSearch] = useState("");
   const [ingredientQuery, setIngredientQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const ITEMS_PER_PAGE = 8;
 
   useEffect(() => {
     getMealsByArea(name).then(async (previews) => {
@@ -63,11 +56,18 @@ export default function AreaDetailPage() {
     return matchCategory && matchLetter && matchIngredient;
   });
 
+  const totalPages = Math.ceil(filteredMeals.length / ITEMS_PER_PAGE);
+  const paginatedMeals = filteredMeals.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const clearFilters = () => {
     setSelectedCategory("");
     setSelectedLetter("");
     setIngredientSearch("");
     setIngredientQuery("");
+    setCurrentPage(1);
   };
 
   const hasActiveFilters = selectedCategory || selectedLetter || ingredientQuery;
@@ -92,16 +92,12 @@ export default function AreaDetailPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
-            <div className="flex items-center gap-4 mb-3">
-              <div>
-                <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-1">
-                  Cuisine
-                </p>
-                <h1 className="font-bold text-white font-poppins text-4xl md:text-5xl">
-                  {name}
-                </h1>
-              </div>
-            </div>
+            <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-1">
+              Cuisine
+            </p>
+            <h1 className="font-bold text-white font-poppins text-4xl md:text-5xl">
+              {name}
+            </h1>
             {!loading && (
               <p className="text-[#9E9E9E] text-sm font-poppins mt-2">
                 {filteredMeals.length} of {allMeals.length} recipes
@@ -156,7 +152,6 @@ export default function AreaDetailPage() {
         {showFilters && (
           <div className={cn("mb-8 p-6 rounded-2xl", "bg-[#1A1A1A] border border-white/5", "space-y-6")}>
 
-            {/* Filter by Category */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by Category
@@ -180,7 +175,6 @@ export default function AreaDetailPage() {
               </div>
             </div>
 
-            {/* Filter by First Letter */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by First Letter
@@ -204,7 +198,6 @@ export default function AreaDetailPage() {
               </div>
             </div>
 
-            {/* Filter by Ingredient */}
             <div>
               <p className="text-[#9E9E9E] text-xs font-poppins uppercase tracking-widest mb-3">
                 Filter by Ingredient
@@ -213,6 +206,7 @@ export default function AreaDetailPage() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   setIngredientQuery(ingredientSearch.trim());
+                  setCurrentPage(1);
                 }}
                 className="flex gap-3 max-w-sm"
               >
@@ -257,8 +251,8 @@ export default function AreaDetailPage() {
             Array.from({ length: 8 }).map((_, i) => (
               <MealCardSkeleton key={i} />
             ))
-          ) : filteredMeals.length > 0 ? (
-            filteredMeals.map((meal) => (
+          ) : paginatedMeals.length > 0 ? (
+            paginatedMeals.map((meal) => (
               <MealCard
                 key={meal.idMeal}
                 id={meal.idMeal}
@@ -273,21 +267,85 @@ export default function AreaDetailPage() {
               <span className="text-5xl">🌍</span>
               <p className="font-bold text-white font-poppins text-xl">No meals found</p>
               <p className="text-[#9E9E9E] text-sm font-poppins">Try adjusting your filters</p>
-              <button
-                onClick={clearFilters}
-                className={cn("px-6 py-3 rounded-pill", "bg-[#FF6B2C] text-white", "text-sm font-semibold font-poppins", "hover:brightness-110 transition-all duration-200")}
-              >
-                Clear Filters
-              </button>
-              
+              <Link
+  href="/areas"
+  className={cn(
+    "px-6 py-3 rounded-pill",
+    "bg-[#FF6B2C] text-white",
+    "text-sm font-semibold font-poppins",
+    "hover:brightness-110 transition-all duration-200"
+  )}
+>
+  Choose Another Area
+</Link>
             </div>
           )}
-          
         </div>
-        
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-12">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "border transition-all duration-200",
+                currentPage === 1
+                  ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                  : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+              )}
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((page) => {
+                if (totalPages <= 5) return true;
+                if (page === 1 || page === totalPages) return true;
+                if (Math.abs(page - currentPage) <= 1) return true;
+                return false;
+              })
+              .map((page, idx, arr) => {
+                const prevPage = arr[idx - 1];
+                const showEllipsis = prevPage && page - prevPage > 1;
+                return (
+                  <div key={page} className="flex items-center gap-2">
+                    {showEllipsis && (
+                      <span className="text-[#9E9E9E] text-sm font-poppins px-1">···</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(page)}
+                      className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center",
+                        "text-sm font-semibold font-poppins transition-all duration-200",
+                        currentPage === page
+                          ? "bg-[#FF6B2C] text-white shadow-[0_0_16px_rgba(255,107,44,0.4)]"
+                          : "text-[#E0E0E0] hover:bg-white/5"
+                      )}
+                    >
+                      {page}
+                    </button>
+                  </div>
+                );
+              })}
+
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center",
+                "border transition-all duration-200",
+                currentPage === totalPages
+                  ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                  : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+              )}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
-      
     </div>
-    
   );
 }
