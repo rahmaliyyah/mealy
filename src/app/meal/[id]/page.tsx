@@ -350,32 +350,6 @@ export default function MealDetailPage() {
               More {meal.strCategory} recipes you might enjoy
             </p>
           </div>
-
-          {/* Slider Arrows */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => scrollSlider("left")}
-              className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center",
-                "border border-white/10 text-[#E0E0E0]",
-                "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
-                "transition-all duration-200"
-              )}
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              onClick={() => scrollSlider("right")}
-              className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center",
-                "border border-white/10 text-[#E0E0E0]",
-                "hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]",
-                "transition-all duration-200"
-              )}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
         </div>
 
         {/* Slider */}
