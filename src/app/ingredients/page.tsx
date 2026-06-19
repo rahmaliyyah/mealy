@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getIngredientsList, type Ingredient } from "@/lib/api";
+
+const ITEMS_PER_PAGE = 18;
 
 export default function IngredientsPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     getIngredientsList().then((data) => {
@@ -21,6 +24,12 @@ export default function IngredientsPage() {
 
   const filtered = ingredients.filter((i) =>
     i.strIngredient.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
 
   return (
@@ -46,7 +55,10 @@ export default function IngredientsPage() {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Search ingredients..."
               className={cn(
                 "w-full rounded-pill",
@@ -74,57 +86,123 @@ export default function IngredientsPage() {
         {/* Grid */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {Array.from({ length: 24 }).map((_, i) => (
+            {Array.from({ length: 18 }).map((_, i) => (
               <div
                 key={i}
                 className="animate-pulse bg-[#1A1A1A] rounded-2xl h-44"
               />
             ))}
           </div>
-        ) : filtered.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {filtered.map((ing) => (
-              <Link
-                key={ing.idIngredient}
-                href={`/ingredients/${ing.strIngredient}`}
-                className={cn(
-                  "group flex flex-col items-center gap-3",
-                  "bg-[#1A1A1A] rounded-2xl p-5",
-                  "border border-white/5",
-                  "hover:border-[#FF6B2C]/40 hover:shadow-card",
-                  "transition-all duration-300 cursor-pointer"
-                )}
-              >
-                {/* Image */}
-                <div className="relative w-20 h-20 flex-shrink-0">
-                  <Image
-                    src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient.replace(/ /g, "_")}-medium.png`}
-                    alt={ing.strIngredient}
-                    fill
-                    className="object-contain group-hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
-
-                {/* Name */}
-                <div className="text-center space-y-1">
-                  <p
-                    className={cn(
-                      "font-semibold text-white font-poppins text-sm",
-                      "group-hover:text-[#FF6B2C] transition-colors duration-200",
-                      "line-clamp-2 text-center leading-tight"
-                    )}
-                  >
-                    {ing.strIngredient}
-                  </p>
-                  {ing.strType && (
-                    <p className="text-[#9E9E9E] text-[10px] font-poppins capitalize">
-                      {ing.strType}
-                    </p>
+        ) : paginated.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {paginated.map((ing) => (
+                <Link
+                  key={ing.idIngredient}
+                  href={`/ingredients/${encodeURIComponent(ing.strIngredient)}`}
+                  className={cn(
+                    "group flex flex-col items-center gap-3",
+                    "bg-[#1A1A1A] rounded-2xl p-5",
+                    "border border-white/5",
+                    "hover:border-[#FF6B2C]/40 hover:shadow-card",
+                    "transition-all duration-300 cursor-pointer"
                   )}
-                </div>
-              </Link>
-            ))}
-          </div>
+                >
+                  {/* Image */}
+                  <div className="relative w-20 h-20 flex-shrink-0">
+                    <Image
+                      src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient.replace(/ /g, "_")}-medium.png`}
+                      alt={ing.strIngredient}
+                      fill
+                      className="object-contain group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+
+                  {/* Name */}
+                  <div className="text-center space-y-1">
+                    <p
+                      className={cn(
+                        "font-semibold text-white font-poppins text-sm",
+                        "group-hover:text-[#FF6B2C] transition-colors duration-200",
+                        "line-clamp-2 text-center leading-tight"
+                      )}
+                    >
+                      {ing.strIngredient}
+                    </p>
+                    {ing.strType && (
+                      <p className="text-[#9E9E9E] text-[10px] font-poppins capitalize">
+                        {ing.strType}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-12">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center",
+                    "border transition-all duration-200",
+                    currentPage === 1
+                      ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                      : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+                  )}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => {
+                    if (totalPages <= 5) return true;
+                    if (page === 1 || page === totalPages) return true;
+                    if (Math.abs(page - currentPage) <= 1) return true;
+                    return false;
+                  })
+                  .map((page, idx, arr) => {
+                    const prevPage = arr[idx - 1];
+                    const showEllipsis = prevPage && page - prevPage > 1;
+                    return (
+                      <div key={page} className="flex items-center gap-2">
+                        {showEllipsis && (
+                          <span className="text-[#9E9E9E] text-sm font-poppins px-1">···</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center",
+                            "text-sm font-semibold font-poppins transition-all duration-200",
+                            currentPage === page
+                              ? "bg-[#FF6B2C] text-white shadow-[0_0_16px_rgba(255,107,44,0.4)]"
+                              : "text-[#E0E0E0] hover:bg-white/5"
+                          )}
+                        >
+                          {page}
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center",
+                    "border transition-all duration-200",
+                    currentPage === totalPages
+                      ? "border-white/5 text-[#9E9E9E]/30 cursor-not-allowed"
+                      : "border-white/10 text-[#E0E0E0] hover:border-[#FF6B2C]/50 hover:text-[#FF6B2C]"
+                  )}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
             <span className="text-5xl">🥕</span>
