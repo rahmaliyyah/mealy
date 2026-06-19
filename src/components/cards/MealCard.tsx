@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MealCardProps {
@@ -17,6 +21,8 @@ export default function MealCard({
   category,
   area,
 }: MealCardProps) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <Link href={`/meal/${id}`}>
       <div
@@ -30,17 +36,25 @@ export default function MealCard({
         )}
       >
         {/* Image */}
-        <div className="relative h-52 overflow-hidden">
-          <Image
-            src={`${thumbnail}/medium`}
-            alt={name}
-            fill
-            className={cn(
-              "object-cover",
-              "group-hover:scale-110",
-              "transition-transform duration-500"
-            )}
-          />
+        <div className="relative h-52 overflow-hidden bg-[#242424]">
+          {!imgError && thumbnail ? (
+            <Image
+              src={`${thumbnail}/medium`}
+              alt={name}
+              fill
+              onError={() => setImgError(true)}
+              className={cn(
+                "object-cover",
+                "group-hover:scale-110",
+                "transition-transform duration-500"
+              )}
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[#9E9E9E]">
+              <ImageOff size={28} />
+              <span className="text-[10px] font-poppins">No image</span>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
         </div>
 
@@ -55,7 +69,7 @@ export default function MealCard({
             {name}
           </h4>
           <div className="flex items-center gap-2 flex-wrap">
-            {category && (
+            {category ? (
               <span
                 className={cn(
                   "px-3 py-1 rounded-badge",
@@ -65,8 +79,18 @@ export default function MealCard({
               >
                 {category}
               </span>
+            ) : (
+              <span
+                className={cn(
+                  "px-3 py-1 rounded-badge",
+                  "bg-white/5 text-[#9E9E9E]",
+                  "text-xs font-medium font-poppins"
+                )}
+              >
+                Uncategorized
+              </span>
             )}
-            {area && (
+            {area ? (
               <span
                 className={cn(
                   "px-3 py-1 rounded-badge",
@@ -75,6 +99,16 @@ export default function MealCard({
                 )}
               >
                 {area}
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  "px-3 py-1 rounded-badge",
+                  "bg-white/5 text-[#9E9E9E]",
+                  "text-xs font-medium font-poppins"
+                )}
+              >
+                Unknown Origin
               </span>
             )}
           </div>

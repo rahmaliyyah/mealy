@@ -69,8 +69,8 @@ export default function SurprisePage() {
             )}
           >
             <span className={cn("inline-block text-xl", spinning && "animate-spin")}>
-  🎲
-</span>
+              🎲
+            </span>
             Role Again
           </button>
         </div>
@@ -94,41 +94,51 @@ export default function SurprisePage() {
               )}
             >
               {/* Image */}
-              <div className="relative h-80 lg:h-auto min-h-[400px]">
-                <Image
-                  src={`${meal.strMealThumb}/large`}
-                  alt={meal.strMeal}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+              <div className="relative h-80 lg:h-auto min-h-[400px] bg-[#242424]">
+                {meal.strMealThumb ? (
+                  <Image
+                    src={`${meal.strMealThumb}/large`}
+                    alt={meal.strMeal}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-[#9E9E9E] text-sm font-poppins">
+                    No image available
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#1A1A1A]/20" />
               </div>
 
               {/* Content */}
               <div className="p-8 md:p-12 flex flex-col justify-center space-y-6">
                 <div className="flex gap-2 flex-wrap">
-                  <span
-                    className={cn(
-                      "px-4 py-1.5 rounded-full",
-                      "bg-[#FF6B2C]/10 text-[#FF6B2C]",
-                      "text-xs font-bold font-poppins uppercase tracking-wider",
-                      "border border-[#FF6B2C]/20"
-                    )}
-                  >
-                    {meal.strCategory}
-                  </span>
+                  {meal.strCategory && (
+                    <span
+                      className={cn(
+                        "px-4 py-1.5 rounded-full",
+                        "bg-[#FF6B2C]/10 text-[#FF6B2C]",
+                        "text-xs font-bold font-poppins uppercase tracking-wider",
+                        "border border-[#FF6B2C]/20"
+                      )}
+                    >
+                      {meal.strCategory}
+                    </span>
+                  )}
 
-                  <span
-                    className={cn(
-                      "px-4 py-1.5 rounded-full",
-                      "bg-[#00FFD1]/10 text-[#00FFD1]",
-                      "text-xs font-bold font-poppins uppercase tracking-wider",
-                      "border border-[#00FFD1]/20"
-                    )}
-                  >
-                    {meal.strArea}
-                  </span>
+                  {meal.strArea && (
+                    <span
+                      className={cn(
+                        "px-4 py-1.5 rounded-full",
+                        "bg-[#00FFD1]/10 text-[#00FFD1]",
+                        "text-xs font-bold font-poppins uppercase tracking-wider",
+                        "border border-[#00FFD1]/20"
+                      )}
+                    >
+                      {meal.strArea}
+                    </span>
+                  )}
                 </div>
 
                 <h2 className="font-bold text-white font-poppins text-3xl md:text-4xl leading-tight">
@@ -183,9 +193,9 @@ export default function SurprisePage() {
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-               {ingredients.map(({ ingredient, measure }, index) => (
-  <div
-    key={`${ingredient}-${index}`}
+                {ingredients.map(({ ingredient, measure }, index) => (
+                  <div
+                    key={`${ingredient}-${index}`}
                     className={cn(
                       "flex flex-col items-center gap-2 p-4",
                       "bg-[#1A1A1A] rounded-2xl",
@@ -194,7 +204,7 @@ export default function SurprisePage() {
                       "transition-colors duration-200"
                     )}
                   >
-                    <div className="relative w-14 h-14">
+                    <div className="relative w-14 h-14 bg-[#242424] rounded-lg overflow-hidden">
                       <Image
                         src={`https://www.themealdb.com/images/ingredients/${ingredient.replace(
                           / /g,
@@ -203,6 +213,9 @@ export default function SurprisePage() {
                         alt={ingredient}
                         fill
                         className="object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
                       />
                     </div>
 

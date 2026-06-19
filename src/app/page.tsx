@@ -122,8 +122,8 @@ export default function HomePage() {
 
       {/* ===== HERO ===== */}
       <section className="relative w-full h-screen flex items-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          {heroMeal && (
+        <div className="absolute inset-0 z-0 bg-[#1A1A1A]">
+          {heroMeal && heroMeal.strMealThumb && (
             <Image
               src={`${heroMeal.strMealThumb}/large`}
               alt={heroMeal.strMeal}
@@ -188,24 +188,34 @@ export default function HomePage() {
                 )}
                 style={{ animation: "float 6s ease-in-out infinite" }}
               >
-                <div className="relative h-52 rounded-2xl overflow-hidden mb-4">
-                  <Image
-                    src={`${heroMeal.strMealThumb}/medium`}
-                    alt={heroMeal.strMeal}
-                    fill
-                    className="object-cover"
-                  />
+                <div className="relative h-52 rounded-2xl overflow-hidden mb-4 bg-[#242424]">
+                  {heroMeal.strMealThumb ? (
+                    <Image
+                      src={`${heroMeal.strMealThumb}/medium`}
+                      alt={heroMeal.strMeal}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-[#9E9E9E] text-xs font-poppins">
+                      No image
+                    </div>
+                  )}
                 </div>
                 <h4 className="font-semibold text-white font-poppins text-base mb-2 line-clamp-1">
                   {heroMeal.strMeal}
                 </h4>
                 <div className="flex gap-2 mb-4">
-                  <span className="px-3 py-1 rounded-badge bg-[#FF6B2C]/10 text-[#FF6B2C] text-xs font-semibold font-poppins">
-                    {heroMeal.strCategory}
-                  </span>
-                  <span className="px-3 py-1 rounded-badge bg-[#00FFD1]/10 text-[#00FFD1] text-xs font-semibold font-poppins">
-                    {heroMeal.strArea}
-                  </span>
+                  {heroMeal.strCategory && (
+                    <span className="px-3 py-1 rounded-badge bg-[#FF6B2C]/10 text-[#FF6B2C] text-xs font-semibold font-poppins">
+                      {heroMeal.strCategory}
+                    </span>
+                  )}
+                  {heroMeal.strArea && (
+                    <span className="px-3 py-1 rounded-badge bg-[#00FFD1]/10 text-[#00FFD1] text-xs font-semibold font-poppins">
+                      {heroMeal.strArea}
+                    </span>
+                  )}
                 </div>
                 <Link
                   href={`/meal/${heroMeal.idMeal}`}
@@ -234,13 +244,19 @@ export default function HomePage() {
       {motdMeal && (
         <section className="max-w-7xl mx-auto px-6 py-24">
           <div className="grid md:grid-cols-2 gap-0 bg-[#1A1A1A] rounded-[40px] overflow-hidden border border-white/5 shadow-card">
-            <div className="relative h-80 md:h-auto min-h-[400px]">
-              <Image
-                src={`${motdMeal.strMealThumb}/large`}
-                alt={motdMeal.strMeal}
-                fill
-                className="object-cover"
-              />
+            <div className="relative h-80 md:h-auto min-h-[400px] bg-[#242424]">
+              {motdMeal.strMealThumb ? (
+                <Image
+                  src={`${motdMeal.strMealThumb}/large`}
+                  alt={motdMeal.strMeal}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-[#9E9E9E] text-sm font-poppins">
+                  No image available
+                </div>
+              )}
             </div>
             <div className="p-8 md:p-12 space-y-6 flex flex-col justify-center">
               <span className="text-[#FF6B2C] font-bold tracking-widest uppercase text-xs font-poppins">
@@ -250,12 +266,16 @@ export default function HomePage() {
                 {motdMeal.strMeal}
               </h2>
               <div className="flex gap-2 flex-wrap">
-                <span className="px-3 py-1 rounded-badge bg-[#FF6B2C]/10 text-[#FF6B2C] text-xs font-semibold font-poppins">
-                  {motdMeal.strCategory}
-                </span>
-                <span className="px-3 py-1 rounded-badge bg-[#00FFD1]/10 text-[#00FFD1] text-xs font-semibold font-poppins">
-                  {motdMeal.strArea}
-                </span>
+                {motdMeal.strCategory && (
+                  <span className="px-3 py-1 rounded-badge bg-[#FF6B2C]/10 text-[#FF6B2C] text-xs font-semibold font-poppins">
+                    {motdMeal.strCategory}
+                  </span>
+                )}
+                {motdMeal.strArea && (
+                  <span className="px-3 py-1 rounded-badge bg-[#00FFD1]/10 text-[#00FFD1] text-xs font-semibold font-poppins">
+                    {motdMeal.strArea}
+                  </span>
+                )}
               </div>
               <p className="text-[#9E9E9E] text-sm font-poppins leading-relaxed line-clamp-4">
                 {motdMeal.strInstructions}
@@ -432,13 +452,17 @@ export default function HomePage() {
                   "transition-all duration-200"
                 )}
               >
-                <Image
-                  src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient.replace(/ /g, "_")}-small.png`}
-                  alt={ing.strIngredient}
-                  width={20}
-                  height={20}
-                  className="object-contain"
-                />
+                <div className="relative w-5 h-5 flex-shrink-0">
+                  <Image
+                    src={`https://www.themealdb.com/images/ingredients/${ing.strIngredient.replace(/ /g, "_")}-small.png`}
+                    alt={ing.strIngredient}
+                    fill
+                    className="object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                </div>
                 {ing.strIngredient}
               </Link>
             ))}
