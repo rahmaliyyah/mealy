@@ -207,27 +207,31 @@ export default function MealDetailPage() {
           </div>
 
           <div className="flex gap-2 mb-4">
-            <span
-              className={cn(
-                "px-4 py-1.5 rounded-pill",
-                "bg-[#FF6B2C]/20 text-[#FF6B2C]",
-                "text-xs font-bold font-poppins uppercase tracking-wider",
-                "border border-[#FF6B2C]/30"
-              )}
-            >
-              {meal.strCategory}
-            </span>
-            <span
-              className={cn(
-                "px-4 py-1.5 rounded-pill",
-                "bg-[#00FFD1]/20 text-[#00FFD1]",
-                "text-xs font-bold font-poppins uppercase tracking-wider",
-                "border border-[#00FFD1]/30"
-              )}
-            >
-              {meal.strArea}
-            </span>
-          </div>
+  {meal.strCategory && (
+    <span
+      className={cn(
+        "px-4 py-1.5 rounded-pill",
+        "bg-[#FF6B2C]/20 text-[#FF6B2C]",
+        "text-xs font-bold font-poppins uppercase tracking-wider",
+        "border border-[#FF6B2C]/30"
+      )}
+    >
+      {meal.strCategory}
+    </span>
+  )}
+  {meal.strArea && (
+    <span
+      className={cn(
+        "px-4 py-1.5 rounded-pill",
+        "bg-[#00FFD1]/20 text-[#00FFD1]",
+        "text-xs font-bold font-poppins uppercase tracking-wider",
+        "border border-[#00FFD1]/30"
+      )}
+    >
+      {meal.strArea}
+    </span>
+  )}
+</div>
 
           <h1
             className={cn(

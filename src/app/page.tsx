@@ -263,10 +263,6 @@ export default function HomePage() {
           )}
         </div>
 
-        <div className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex-col items-center gap-2 animate-bounce">
-          <p className="text-[#9E9E9E] text-xs font-poppins">Scroll to explore</p>
-          <ChevronDown size={20} className="text-[#9E9E9E]" />
-        </div>
       </section>
 
       {/* ===== MEAL OF THE DAY ===== */}

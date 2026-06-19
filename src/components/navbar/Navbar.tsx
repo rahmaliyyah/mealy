@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Search, Shuffle, Menu, X, ChevronDown } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Menu, X, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -25,9 +25,12 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ idMeal: string; strMeal: string; strMealThumb: string }[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [browseOpen, setBrowseOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pathname = usePathname();
   const isHomepage = pathname === "/";
@@ -44,6 +47,23 @@ export default function Navbar() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setSearchLoading(true);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      const res = await fetch(
+        `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(searchQuery)}`
+      );
+      const data = await res.json();
+      setSearchResults(data.meals?.slice(0, 5) || []);
+      setSearchLoading(false);
+    }, 400);
+  }, [searchQuery]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +94,12 @@ export default function Navbar() {
       e.preventDefault();
       scrollToHero();
     }
+  };
+
+  const clearSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   return (
@@ -228,85 +254,204 @@ export default function Navbar() {
         {/* Right Side */}
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "6px" : "12px" }}>
 
-          {/* Search Bar — hidden on mobile, replaced by icon in overlay/hamburger row */}
+          {/* Search Bar — desktop only with live results */}
           {!isMobile && (
-            <form
-              onSubmit={handleSearch}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                backgroundColor: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "9999px",
-                overflow: "hidden",
-                width: searchOpen ? "240px" : "44px",
-                height: "44px",
-                transition: "width 0.3s ease",
-              }}
-            >
-              <button
-                type={searchOpen ? "submit" : "button"}
-                onClick={() => !searchOpen && setSearchOpen(true)}
+            <div style={{ position: "relative" }}>
+              <form
+                onSubmit={handleSearch}
                 style={{
-                  width: "44px",
-                  height: "44px",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "9999px",
+                  overflow: "hidden",
+                  width: searchOpen ? "240px" : "44px",
+                  height: "44px",
+                  transition: "width 0.3s ease",
                 }}
               >
-                <Search size={18} color="#9E9E9E" />
-              </button>
-
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search meals..."
-                style={{
-                  flex: 1,
-                  background: "transparent",
-                  border: "none",
-                  outline: "none",
-                  color: "white",
-                  fontSize: "14px",
-                  fontFamily: "var(--font-poppins)",
-                  paddingRight: "12px",
-                  opacity: searchOpen ? 1 : 0,
-                  transition: "opacity 0.2s ease",
-                  width: searchOpen ? "auto" : "0px",
-                }}
-              />
-
-              {searchOpen && (
                 <button
-                  type="button"
-                  onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                  type={searchOpen ? "submit" : "button"}
+                  onClick={() => !searchOpen && setSearchOpen(true)}
                   style={{
-                    width: "32px",
-                    height: "32px",
+                    width: "44px",
+                    height: "44px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#9E9E9E",
                     flexShrink: 0,
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    marginRight: "4px",
                   }}
                 >
-                  <X size={14} />
+                  <Search size={18} color="#9E9E9E" />
                 </button>
+
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search meals..."
+                  style={{
+                    flex: 1,
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    color: "white",
+                    fontSize: "14px",
+                    fontFamily: "var(--font-poppins)",
+                    paddingRight: "12px",
+                    opacity: searchOpen ? 1 : 0,
+                    transition: "opacity 0.2s ease",
+                    width: searchOpen ? "auto" : "0px",
+                  }}
+                />
+
+                {searchOpen && (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#9E9E9E",
+                      flexShrink: 0,
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      marginRight: "4px",
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </form>
+
+              {/* Live Search Dropdown */}
+              {searchOpen && searchQuery.trim() && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 8px)",
+                    right: 0,
+                    width: "280px",
+                    backgroundColor: "rgba(26,26,26,0.98)",
+                    backdropFilter: "blur(20px)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                    zIndex: 20,
+                  }}
+                >
+                  {searchLoading ? (
+                    <p
+                      style={{
+                        padding: "16px",
+                        color: "#9E9E9E",
+                        fontSize: "14px",
+                        fontFamily: "var(--font-poppins)",
+                      }}
+                    >
+                      Searching...
+                    </p>
+                  ) : searchResults.length > 0 ? (
+                    <>
+                      {searchResults.map((meal) => (
+                        <Link
+                          key={meal.idMeal}
+                          href={`/meal/${meal.idMeal}`}
+                          onClick={clearSearch}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "10px 16px",
+                            textDecoration: "none",
+                            transition: "background 0.15s ease",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.backgroundColor = "transparent")
+                          }
+                        >
+                          <img
+                            src={`${meal.strMealThumb}/small`}
+                            alt={meal.strMeal}
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "8px",
+                              objectFit: "cover",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <span
+                            style={{
+                              color: "#E0E0E0",
+                              fontSize: "14px",
+                              fontFamily: "var(--font-poppins)",
+                              fontWeight: 500,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {meal.strMeal}
+                          </span>
+                        </Link>
+                      ))}
+                      <div
+                        style={{
+                          borderTop: "1px solid rgba(255,255,255,0.05)",
+                          padding: "10px 16px",
+                        }}
+                      >
+                        <button
+                          onClick={() => {
+                            window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
+                            clearSearch();
+                          }}
+                          style={{
+                            color: "#FF6B2C",
+                            fontSize: "13px",
+                            fontFamily: "var(--font-poppins)",
+                            fontWeight: 600,
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                        >
+                          See all results for "{searchQuery}"
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p
+                      style={{
+                        padding: "16px",
+                        color: "#9E9E9E",
+                        fontSize: "14px",
+                        fontFamily: "var(--font-poppins)",
+                      }}
+                    >
+                      No results found
+                    </p>
+                  )}
+                </div>
               )}
-            </form>
+            </div>
           )}
 
-          {/* Mobile Search Icon — opens mobile overlay search */}
+          {/* Mobile Search Icon */}
           {isMobile && (
             <button
               onClick={() => setMobileOpen(true)}
@@ -466,7 +611,7 @@ export default function Navbar() {
                         style={{
                           fontSize: "22px",
                           fontWeight: 700,
-                          color: "white",
+                          color: pathname === item.href ? "#FF6B2C" : "white",
                           fontFamily: "var(--font-poppins)",
                           textDecoration: "none",
                         }}
@@ -484,7 +629,7 @@ export default function Navbar() {
                   style={{
                     fontSize: "26px",
                     fontWeight: 700,
-                    color: "white",
+                    color: pathname === link.href ? "#FF6B2C" : "white",
                     fontFamily: "var(--font-poppins)",
                     textDecoration: "none",
                   }}
@@ -516,7 +661,7 @@ export default function Navbar() {
               textDecoration: "none",
             }}
           >
-           <span style={{ fontSize: "18px" }}>🎲</span>
+            <span style={{ fontSize: "18px" }}>🎲</span>
             Surprise Me
           </Link>
         </div>
